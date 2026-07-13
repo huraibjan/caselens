@@ -1,4 +1,4 @@
-# CaseLens — Agent Roles & File Ownership
+# CaseIntelix — Agent Roles & File Ownership
 
 ## Role Definitions
 

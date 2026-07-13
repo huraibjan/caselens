@@ -1,6 +1,6 @@
 ---
 name: product-architecture
-description: Guides high-level product architecture decisions, feature scoping, and legal-domain requirements for the CaseLens platform.
+description: Guides high-level product architecture decisions, feature scoping, and legal-domain requirements for the CaseIntelix platform.
 ---
 
 # Product Architecture Skill

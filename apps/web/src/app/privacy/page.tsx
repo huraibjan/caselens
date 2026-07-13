@@ -2,20 +2,20 @@ import type { Metadata } from 'next';
 import LegalPage from '@/components/legal/LegalPage';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy · CaseLens',
-  description: 'How CaseLens collects, uses, stores, and protects your data.',
+  title: 'Privacy Policy · CaseIntelix',
+  description: 'How CaseIntelix collects, uses, stores, and protects your data.',
 };
 
 export default function PrivacyPage() {
   return (
     <LegalPage
       title="Privacy Policy"
-      subtitle="How we handle your account information and the legal documents you entrust to CaseLens."
+      subtitle="How we handle your account information and the legal documents you entrust to CaseIntelix."
       effectiveDate="July 13, 2026"
     >
       <section>
         <p>
-          CaseLens (&ldquo;CaseLens,&rdquo; &ldquo;we,&rdquo; &ldquo;us&rdquo;) provides an AI-assisted platform for
+          CaseIntelix (&ldquo;CaseIntelix,&rdquo; &ldquo;we,&rdquo; &ldquo;us&rdquo;) provides an AI-assisted platform for
           analyzing legal documents, generating drafts, and answering questions grounded in
           your case files. This Privacy Policy explains what data we process and why. Because
           the documents you upload are often sensitive and may be subject to attorney–client
@@ -66,7 +66,7 @@ export default function PrivacyPage() {
       <section>
         <h2>3. AI subprocessors</h2>
         <p>
-          To generate answers, summaries, and drafts, CaseLens sends relevant text — which may
+          To generate answers, summaries, and drafts, CaseIntelix sends relevant text — which may
           include excerpts of your uploaded documents and your questions — to third-party AI
           inference providers. Depending on configuration and availability, these may include:
         </p>
@@ -80,7 +80,7 @@ export default function PrivacyPage() {
         <p>
           Each provider processes the data under its own terms and privacy policy. We send the
           minimum context needed to answer a request, and requests are made over encrypted
-          connections. Operators who deploy CaseLens can configure which providers are enabled
+          connections. Operators who deploy CaseIntelix can configure which providers are enabled
           via the provider-chain settings. If you require that document contents never leave a
           specific boundary, do not enable external providers for that deployment.
         </p>
@@ -131,7 +131,7 @@ export default function PrivacyPage() {
       <section>
         <h2>8. Cookies &amp; local storage</h2>
         <p>
-          CaseLens uses browser local storage to hold your session tokens so you stay signed in.
+          CaseIntelix uses browser local storage to hold your session tokens so you stay signed in.
           We do not use third-party advertising or cross-site tracking cookies.
         </p>
       </section>

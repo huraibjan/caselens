@@ -1,6 +1,6 @@
 ---
 name: backend-development
-description: FastAPI backend development with SQLAlchemy 2.0, Pydantic v2, and async Python for the CaseLens platform.
+description: FastAPI backend development with SQLAlchemy 2.0, Pydantic v2, and async Python for the CaseIntelix platform.
 ---
 
 # Backend Development Skill

@@ -98,10 +98,10 @@ export default function LoadingScreen({ onComplete }: Props) {
               animation: 'pulse 2s ease-in-out infinite',
             }}
           >
-            CL
+            CI
           </div>
           <div className="text-center">
-            <div className="text-xl font-black text-white tracking-tight">CaseLens</div>
+            <div className="text-xl font-black text-white tracking-tight">CaseIntelix</div>
             <div className="text-xs font-medium mt-0.5" style={{ color: '#60A5FA' }}>Legal Intelligence Platform</div>
           </div>
         </div>

@@ -4,10 +4,10 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    """CaseLens application settings."""
+    """CaseIntelix application settings."""
 
     # Application
-    APP_NAME: str = "CaseLens"
+    APP_NAME: str = "CaseIntelix"
     APP_ENV: str = "development"
     APP_DEBUG: bool = True
     APP_LOG_LEVEL: str = "INFO"

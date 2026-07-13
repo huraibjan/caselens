@@ -4,7 +4,7 @@
 Approved
 
 ## Context
-CaseLens needs authentication and role-based tenant routing from day one. Using identity providers (e.g., Auth0) in early development adds setup friction and limits offline local dev capability.
+CaseIntelix needs authentication and role-based tenant routing from day one. Using identity providers (e.g., Auth0) in early development adds setup friction and limits offline local dev capability.
 
 ## Decision
 We will implement local username/password JWT authentication for Phase 1. Users register and log in to obtain JWT access and refresh tokens signed with a local HS256 secret.

@@ -1,7 +1,7 @@
-# CaseLens — Project Context
+# CaseIntelix — Project Context
 
 ## Product Overview
-**CaseLens** is a production-oriented, multi-tenant legal case-intelligence and law-office management platform. It augments lawyers with AI-powered document processing, evidence analysis, and citation-grounded case questioning, while enforcing strict legal safety rules, tenant isolation, and evidence provenance.
+**CaseIntelix** is a production-oriented, multi-tenant legal case-intelligence and law-office management platform. It augments lawyers with AI-powered document processing, evidence analysis, and citation-grounded case questioning, while enforcing strict legal safety rules, tenant isolation, and evidence provenance.
 
 ## Architecture
 - **Modular Monolith** — single deployable backend with strict module boundaries (auth, organizations, matters, documents, search, rag, ai_gateway, storage, audit)

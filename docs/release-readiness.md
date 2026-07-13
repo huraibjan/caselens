@@ -1,4 +1,4 @@
-# CaseLens Phase 1 Release Readiness Checklist
+# CaseIntelix Phase 1 Release Readiness Checklist
 
 This document tracks items required before marking the vertical slice as complete.
 

@@ -1,7 +1,7 @@
-# CaseLens System Architecture Specification
+# CaseIntelix System Architecture Specification
 
 ## 1. Modular Monolith Design
-CaseLens is built as a modular monolith to maximize simplicity of deployment while enforcing clean logical separation of concerns.
+CaseIntelix is built as a modular monolith to maximize simplicity of deployment while enforcing clean logical separation of concerns.
 
 ```
 +-------------------------------------------------------------+

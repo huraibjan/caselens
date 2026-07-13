@@ -1,6 +1,6 @@
-# Deploying CaseLens for Free
+# Deploying CaseIntelix for Free
 
-This guide explains how to publish CaseLens so anyone can access it, entirely on
+This guide explains how to publish CaseIntelix so anyone can access it, entirely on
 free tiers.
 
 ## This app is now fully free-hostable
@@ -50,7 +50,7 @@ after idle (first request is slow), but there are no paid components.
    create extension if not exists vector;
    create extension if not exists "uuid-ossp";
    ```
-3. Copy the connection string and convert it to async form for CaseLens:
+3. Copy the connection string and convert it to async form for CaseIntelix:
    `postgresql+asyncpg://USER:PASSWORD@HOST:5432/postgres`
 4. Run migrations against it once:
    ```bash
@@ -99,7 +99,7 @@ set `TEMPORAL_HOST`; it isn't used.
 2. Environment variables:
    ```
    NEXT_PUBLIC_API_URL=https://your-api.onrender.com   # your deployed API URL
-   NEXT_PUBLIC_APP_NAME=CaseLens
+   NEXT_PUBLIC_APP_NAME=CaseIntelix
    NEXT_PUBLIC_GOOGLE_CLIENT_ID=<your google web client id>   # optional
    ```
 3. Deploy. Vercel gives you `https://your-app.vercel.app`.

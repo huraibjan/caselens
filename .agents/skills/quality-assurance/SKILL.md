@@ -1,6 +1,6 @@
 ---
 name: quality-assurance
-description: Test strategy, test implementation, and quality gates for the CaseLens platform across backend, frontend, and E2E.
+description: Test strategy, test implementation, and quality gates for the CaseIntelix platform across backend, frontend, and E2E.
 ---
 
 # Quality Assurance Skill

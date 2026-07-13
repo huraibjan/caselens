@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⚖️ CaseLens
+# ⚖️ CaseIntelix
 
 **AI-Powered Legal Case Intelligence Platform**
 
@@ -14,13 +14,13 @@ Upload case documents, get grounded AI answers with page-level citations, auto-e
 
 <br/>
 
-<img src="docs/screenshots/login.jpg" alt="CaseLens sign-in screen" width="100%" />
+<img src="docs/screenshots/login.jpg" alt="CaseIntelix sign-in screen" width="100%" />
 
 <br/>
 
-## What is CaseLens?
+## What is CaseIntelix?
 
-CaseLens is a **multi-tenant legal case-intelligence workspace**. A law firm uploads case documents (PDFs), and the platform:
+CaseIntelix is a **multi-tenant legal case-intelligence workspace**. A law firm uploads case documents (PDFs), and the platform:
 
 - **Extracts structured case intelligence** — defendant/parties, key dates, a veracity score, allegations, contradictions between witness statements, and predicted outcomes.
 - **Answers questions with citations** — a RAG (retrieval-augmented generation) pipeline retrieves the exact passages that support an answer and cites `[Source N]` back to the page they came from, so nothing is unverifiable.
@@ -188,7 +188,7 @@ make typecheck   # mypy --strict (Python) + tsc (web)
 
 ## Deployment
 
-CaseLens is designed to be deployable entirely on free tiers — no credit card required for the core path. The document-processing pipeline runs inside the API process by default, so there's no message broker or worker fleet to host. Full step-by-step instructions (Supabase, Render, Vercel, Google OAuth) are in [`docs/DEPLOYMENT_FREE_HOSTING.md`](docs/DEPLOYMENT_FREE_HOSTING.md).
+CaseIntelix is designed to be deployable entirely on free tiers — no credit card required for the core path. The document-processing pipeline runs inside the API process by default, so there's no message broker or worker fleet to host. Full step-by-step instructions (Supabase, Render, Vercel, Google OAuth) are in [`docs/DEPLOYMENT_FREE_HOSTING.md`](docs/DEPLOYMENT_FREE_HOSTING.md).
 
 ## Security & compliance posture
 

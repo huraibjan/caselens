@@ -59,10 +59,10 @@ export default function Register() {
         <div className="relative z-10 max-w-sm">
           <div className="w-16 h-16 rounded-2xl flex items-center justify-center font-black text-xl text-white mx-auto mb-6"
             style={{ background: 'linear-gradient(135deg, #3B82F6, #6366F1)', boxShadow: '0 8px 24px rgba(99,102,241,0.5)' }}>
-            CL
+            CI
           </div>
           <h2 className="text-3xl font-black text-white mb-4" style={{ letterSpacing: '-0.02em' }}>
-            Join CaseLens
+            Join CaseIntelix
           </h2>
           <p className="text-slate-400 leading-relaxed mb-8">
             Set up your secure legal workspace in minutes. Start analyzing cases with AI-powered precision.
@@ -86,8 +86,8 @@ export default function Register() {
         {/* Mobile logo */}
         <div className="flex items-center gap-3 mb-8 lg:hidden">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm text-white"
-            style={{ background: 'linear-gradient(135deg, #3B82F6, #6366F1)' }}>CL</div>
-          <span className="font-black text-xl text-slate-900">CaseLens</span>
+            style={{ background: 'linear-gradient(135deg, #3B82F6, #6366F1)' }}>CI</div>
+          <span className="font-black text-xl text-slate-900">CaseIntelix</span>
         </div>
 
         <div className="w-full max-w-[420px]">

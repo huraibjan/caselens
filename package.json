@@ -2,7 +2,7 @@
   "name": "caselens",
   "private": true,
   "version": "0.1.0",
-  "description": "CaseLens — Legal Case Intelligence Platform",
+  "description": "CaseIntelix — Legal Case Intelligence Platform",
   "engines": {
     "node": ">=20"
   },

@@ -1,7 +1,7 @@
-# CaseLens RAG and Citation Design
+# CaseIntelix RAG and Citation Design
 
 ## 1. Retrieval Strategy
-CaseLens uses a hybrid search approach:
+CaseIntelix uses a hybrid search approach:
 * **Full-Text Keyword Search**: Powered by PostgreSQL English language `tsvector` and `ts_rank` matching.
 * **Semantic Vector Search**: Powered by `pgvector` performing cosine similarity calculations on chunk embeddings.
 * **Reciprocal Rank Fusion (RRF)**: Merges text and vector results to compute a final relevance score.

@@ -1,4 +1,4 @@
-# CaseLens API Specification
+# CaseIntelix API Specification
 
 ## Authentication Endpoints
 

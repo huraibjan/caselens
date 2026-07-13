@@ -1,4 +1,4 @@
-# CaseLens Evaluation Plan
+# CaseIntelix Evaluation Plan
 
 ## 1. RAG Evaluation Metrics
 We assess RAG performance against the following indicators:

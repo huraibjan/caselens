@@ -1,4 +1,4 @@
-# CaseLens Project Current Phase Tracker
+# CaseIntelix Project Current Phase Tracker
 
 ## Current Status: Phase 1 — Vertical Slice (In Progress)
 

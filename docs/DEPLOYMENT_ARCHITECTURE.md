@@ -1,7 +1,7 @@
-# CaseLens Deployment Architecture
+# CaseIntelix Deployment Architecture
 
 ## 1. Container Topology
-CaseLens services run inside isolated Docker containers orchestrated via Docker Compose:
+CaseIntelix services run inside isolated Docker containers orchestrated via Docker Compose:
 
 * **PostgreSQL (pgvector/pgvector:pg17)**: Database containing multi-tenant tables and vector embeddings.
 * **Redis (redis:7-alpine)**: Session tracking, token metadata, and service coordination.

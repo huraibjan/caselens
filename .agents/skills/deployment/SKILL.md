@@ -1,6 +1,6 @@
 ---
 name: deployment
-description: Docker containerization, Docker Compose orchestration, CI/CD, and local development environment for CaseLens.
+description: Docker containerization, Docker Compose orchestration, CI/CD, and local development environment for CaseIntelix.
 ---
 
 # Deployment Skill

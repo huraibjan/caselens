@@ -1,1 +1,1 @@
-"""CaseLens document processing worker."""
+"""CaseIntelix document processing worker."""

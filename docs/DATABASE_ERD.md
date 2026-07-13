@@ -1,4 +1,4 @@
-# CaseLens Database ERD
+# CaseIntelix Database ERD
 
 This document maps the core database relationships using Mermaid notation.
 

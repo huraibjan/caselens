@@ -4,7 +4,7 @@
 Approved
 
 ## Context
-CaseLens stores structured relational legal metadata (matters, organizations, users, logs) and high-dimensional document chunk vector embeddings. Introducing a separate specialized vector database (e.g., Pinecone, Milvus, Qdrant) creates data synchronization issues, additional costs, and splits transaction integrity.
+CaseIntelix stores structured relational legal metadata (matters, organizations, users, logs) and high-dimensional document chunk vector embeddings. Introducing a separate specialized vector database (e.g., Pinecone, Milvus, Qdrant) creates data synchronization issues, additional costs, and splits transaction integrity.
 
 ## Decision
 We will use PostgreSQL with the `pgvector` extension. All document chunk metadata, full-text search indexes, and vector embeddings will reside inside the same PostgreSQL instance.

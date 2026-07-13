@@ -1,4 +1,4 @@
-# CaseLens Security Threat Model (STRIDE)
+# CaseIntelix Security Threat Model (STRIDE)
 
 ## 1. Spoofing
 * **Threat**: A malicious user spoofing another firm member's account.

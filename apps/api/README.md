@@ -1,3 +1,3 @@
-# CaseLens API
+# CaseIntelix API
 
-FastAPI backend for CaseLens platform.
+FastAPI backend for CaseIntelix platform.

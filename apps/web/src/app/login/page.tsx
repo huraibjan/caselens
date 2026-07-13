@@ -103,10 +103,10 @@ export default function Login() {
           <div className="flex items-center gap-3 mb-16">
             <div className="w-11 h-11 rounded-xl flex items-center justify-center font-black text-sm text-white"
               style={{ background: 'linear-gradient(135deg, #3B82F6, #6366F1)', boxShadow: '0 4px 20px rgba(99,102,241,0.5)' }}>
-              CL
+              CI
             </div>
             <div>
-              <div className="text-lg font-black text-white tracking-tight">CaseLens</div>
+              <div className="text-lg font-black text-white tracking-tight">CaseIntelix</div>
               <div className="text-xs font-medium" style={{ color: '#60A5FA' }}>Legal Intelligence Platform</div>
             </div>
           </div>
@@ -164,9 +164,9 @@ export default function Login() {
         <div className="flex items-center gap-3 mb-8 lg:hidden">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm text-white"
             style={{ background: 'linear-gradient(135deg, #3B82F6, #6366F1)' }}>
-            CL
+            CI
           </div>
-          <span className="font-black text-xl text-slate-900">CaseLens</span>
+          <span className="font-black text-xl text-slate-900">CaseIntelix</span>
         </div>
 
         <div className="w-full max-w-[420px]">

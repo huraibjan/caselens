@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import LegalPage from '@/components/legal/LegalPage';
 
 export const metadata: Metadata = {
-  title: 'Security · CaseLens',
-  description: 'How CaseLens protects your account, your documents, and your data.',
+  title: 'Security · CaseIntelix',
+  description: 'How CaseIntelix protects your account, your documents, and your data.',
 };
 
 export default function SecurityPage() {
@@ -15,7 +15,7 @@ export default function SecurityPage() {
     >
       <section>
         <p>
-          CaseLens handles sensitive legal documents, so security is a first-class design goal.
+          CaseIntelix handles sensitive legal documents, so security is a first-class design goal.
           This page describes the controls currently in place. We describe our practices
           honestly: where a control is a design principle rather than an independently audited
           certification, we say so.
@@ -35,7 +35,7 @@ export default function SecurityPage() {
         <h2>2. Authentication</h2>
         <ul>
           <li>Stateless JWT access tokens (short-lived) plus refresh tokens.</li>
-          <li>Optional Google Sign-In: we verify the Google-issued ID token server-side, confirm the audience and a verified email, and only then issue a CaseLens session.</li>
+          <li>Optional Google Sign-In: we verify the Google-issued ID token server-side, confirm the audience and a verified email, and only then issue a CaseIntelix session.</li>
           <li>Tokens are scoped to a user and organization and are validated on every request.</li>
         </ul>
       </section>
@@ -92,11 +92,11 @@ export default function SecurityPage() {
       <section>
         <h2>8. Compliance posture</h2>
         <p>
-          CaseLens is built with the principles behind frameworks such as SOC 2 in mind —
+          CaseIntelix is built with the principles behind frameworks such as SOC 2 in mind —
           least-privilege access, auditability, encryption, and tenant isolation. References to
           such frameworks in the product describe our design approach and do not, by themselves,
           represent a completed third-party certification unless separately stated in a current
-          attestation report. Operators deploying CaseLens are responsible for the compliance of
+          attestation report. Operators deploying CaseIntelix are responsible for the compliance of
           their own deployment and configuration.
         </p>
       </section>

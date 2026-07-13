@@ -1,4 +1,4 @@
-# CaseLens Risk Register
+# CaseIntelix Risk Register
 
 This document tracks system-level risks and mitigation strategies.
 

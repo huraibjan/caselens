@@ -1,4 +1,4 @@
-"""CaseLens API — Legal Case Intelligence Platform."""
+"""CaseIntelix API — Legal Case Intelligence Platform."""
 
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
@@ -32,7 +32,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
     app = FastAPI(
-        title="CaseLens API",
+        title="CaseIntelix API",
         description="Legal Case Intelligence Platform — Phase 1",
         version="0.1.0",
         docs_url="/api/docs" if settings.APP_DEBUG else None,

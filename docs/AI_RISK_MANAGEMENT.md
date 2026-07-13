@@ -1,7 +1,7 @@
-# CaseLens AI Risk Management Guidelines
+# CaseIntelix AI Risk Management Guidelines
 
 ## 1. Grounding Principles
-CaseLens must strictly act as an information synthesis tool. It does not provide legal advice. All outputs must contain:
+CaseIntelix must strictly act as an information synthesis tool. It does not provide legal advice. All outputs must contain:
 1. Clear disclaimers stating that the generated answer is an AI-generated hypothesis.
 2. Verified page-level citations pointing directly to uploaded documents.
 

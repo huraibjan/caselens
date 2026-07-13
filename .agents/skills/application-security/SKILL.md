@@ -1,6 +1,6 @@
 ---
 name: application-security
-description: Authentication, authorization, tenant isolation, input validation, and security threat modeling for the CaseLens platform.
+description: Authentication, authorization, tenant isolation, input validation, and security threat modeling for the CaseIntelix platform.
 ---
 
 # Application Security Skill

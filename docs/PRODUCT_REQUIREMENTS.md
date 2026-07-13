@@ -1,7 +1,7 @@
-# CaseLens Product Requirements Document (PRD)
+# CaseIntelix Product Requirements Document (PRD)
 
 ## 1. Executive Summary
-CaseLens is an enterprise-grade, multi-tenant legal case-intelligence platform. It allows law firms to securely upload case files, perform high-accuracy hybrid search, and ask questions across matters while receiving answers strictly grounded in the document text with page-level citations.
+CaseIntelix is an enterprise-grade, multi-tenant legal case-intelligence platform. It allows law firms to securely upload case files, perform high-accuracy hybrid search, and ask questions across matters while receiving answers strictly grounded in the document text with page-level citations.
 
 ## 2. Multi-Tenancy & Data Isolation
 * **Tenant Isolation**: Strict logical segregation of all data. All database tables must contain an `organization_id` linked to the tenant organization.

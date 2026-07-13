@@ -1,4 +1,4 @@
-# CaseLens Technical Debt Registry
+# CaseIntelix Technical Debt Registry
 
 This registry tracks tasks deferred during Phase 1 development to be resolved in Phase 2+.
 

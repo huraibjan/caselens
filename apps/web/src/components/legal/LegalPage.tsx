@@ -18,9 +18,9 @@ export default function LegalPage({ title, subtitle, effectiveDate, children }: 
           <Link href="/login" className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-lg flex items-center justify-center font-black text-xs text-white"
               style={{ background: 'linear-gradient(135deg, #3B82F6, #6366F1)' }}>
-              CL
+              CI
             </div>
-            <span className="font-black text-lg text-slate-900 tracking-tight">CaseLens</span>
+            <span className="font-black text-lg text-slate-900 tracking-tight">CaseIntelix</span>
           </Link>
           <nav className="flex items-center gap-5 text-sm">
             <Link href="/privacy" className="text-slate-500 hover:text-slate-900 transition-colors">Privacy</Link>
@@ -49,7 +49,7 @@ export default function LegalPage({ title, subtitle, effectiveDate, children }: 
         </article>
 
         <div className="mt-16 pt-8 border-t border-slate-200 flex flex-wrap items-center justify-between gap-4">
-          <p className="text-sm text-slate-400">© {new Date().getFullYear()} CaseLens. All rights reserved.</p>
+          <p className="text-sm text-slate-400">© {new Date().getFullYear()} CaseIntelix. All rights reserved.</p>
           <Link href="/login" className="text-sm font-semibold text-blue-700 hover:text-blue-800">← Back to sign in</Link>
         </div>
       </main>

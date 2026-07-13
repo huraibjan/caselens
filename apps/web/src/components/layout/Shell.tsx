@@ -143,11 +143,11 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         {/* Logo */}
         <div className="flex items-center gap-3 shrink-0" style={{ padding: '20px 18px 18px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
           <div className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm text-white" style={{ background: 'linear-gradient(135deg, #3B82F6, #6366F1)', boxShadow: '0 4px 12px rgba(99,102,241,0.4)' }}>
-            CL
+            CI
           </div>
           {!collapsed && (
             <div className="min-w-0">
-              <div className="font-bold text-white text-sm tracking-tight truncate">CaseLens</div>
+              <div className="font-bold text-white text-sm tracking-tight truncate">CaseIntelix</div>
               <div className="text-xs truncate" style={{ color: '#64748B' }}>Legal Intelligence</div>
             </div>
           )}

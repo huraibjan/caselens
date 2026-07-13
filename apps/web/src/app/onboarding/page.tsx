@@ -50,7 +50,7 @@ export default function Onboarding() {
       <div className="w-full max-w-md p-8 rounded-2xl border border-slate-800/80 bg-slate-900/40 backdrop-blur-md shadow-2xl space-y-6">
         <div className="text-center space-y-2">
           <div className="inline-flex w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-600 items-center justify-center font-bold text-white shadow-md shadow-indigo-500/20 mb-2">
-            CL
+            CI
           </div>
           <h2 className="text-2xl font-bold tracking-tight">Set up your Law Firm</h2>
           <p className="text-sm text-slate-400">Establish a private secure workspace for your cases</p>

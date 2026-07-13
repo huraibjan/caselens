@@ -2,22 +2,22 @@ import type { Metadata } from 'next';
 import LegalPage from '@/components/legal/LegalPage';
 
 export const metadata: Metadata = {
-  title: 'Terms of Service · CaseLens',
-  description: 'The terms governing your use of the CaseLens platform.',
+  title: 'Terms of Service · CaseIntelix',
+  description: 'The terms governing your use of the CaseIntelix platform.',
 };
 
 export default function TermsPage() {
   return (
     <LegalPage
       title="Terms of Service"
-      subtitle="The agreement between you and CaseLens for use of the platform."
+      subtitle="The agreement between you and CaseIntelix for use of the platform."
       effectiveDate="July 13, 2026"
     >
       <section>
         <p>
           These Terms of Service (&ldquo;Terms&rdquo;) govern your access to and use of the
-          CaseLens platform (the &ldquo;Service&rdquo;). By creating an account or using the
-          Service, you agree to these Terms. If you are using CaseLens on behalf of a firm or
+          CaseIntelix platform (the &ldquo;Service&rdquo;). By creating an account or using the
+          Service, you agree to these Terms. If you are using CaseIntelix on behalf of a firm or
           organization, you represent that you are authorized to bind that organization.
         </p>
       </section>
@@ -25,7 +25,7 @@ export default function TermsPage() {
       <section>
         <h2>1. The Service</h2>
         <p>
-          CaseLens is an AI-assisted workspace for legal professionals. It analyzes documents
+          CaseIntelix is an AI-assisted workspace for legal professionals. It analyzes documents
           you upload, retrieves relevant passages, and generates summaries, answers, and draft
           documents grounded in your case files. The Service is a productivity tool — not a
           lawyer, law firm, or provider of legal services.
@@ -40,8 +40,8 @@ export default function TermsPage() {
             qualified, licensed attorney before it is relied upon or used with any client,
             court, or counterparty.
           </strong>{' '}
-          Use of CaseLens does not create an attorney–client relationship between you and
-          CaseLens. AI systems can produce errors, omissions, or &ldquo;hallucinations,&rdquo;
+          Use of CaseIntelix does not create an attorney–client relationship between you and
+          CaseIntelix. AI systems can produce errors, omissions, or &ldquo;hallucinations,&rdquo;
           and every AI response in the Service is marked as requiring human review. You are
           solely responsible for verifying accuracy, citations, and legal sufficiency, and for
           all professional and ethical obligations to your clients.
@@ -73,7 +73,7 @@ export default function TermsPage() {
         <h2>5. Your content</h2>
         <p>
           You retain all ownership of the documents and data you upload (&ldquo;Your
-          Content&rdquo;). You grant CaseLens a limited license to store, process, and transmit
+          Content&rdquo;). You grant CaseIntelix a limited license to store, process, and transmit
           Your Content solely to operate the Service for you — including sending relevant
           excerpts to the AI subprocessors described in our{' '}
           <a href="/privacy">Privacy Policy</a>. You are responsible for having the rights and
@@ -84,7 +84,7 @@ export default function TermsPage() {
       <section>
         <h2>6. Intellectual property</h2>
         <p>
-          The Service, including its software, design, and trademarks, belongs to CaseLens and
+          The Service, including its software, design, and trademarks, belongs to CaseIntelix and
           its licensors. These Terms grant you a limited, non-exclusive, non-transferable right
           to use the Service; they do not transfer any of our intellectual property to you.
         </p>
@@ -123,7 +123,7 @@ export default function TermsPage() {
       <section>
         <h2>10. Indemnification</h2>
         <p>
-          You agree to indemnify and hold CaseLens harmless from claims arising out of Your
+          You agree to indemnify and hold CaseIntelix harmless from claims arising out of Your
           Content, your use of the Service, or your violation of these Terms or applicable law.
         </p>
       </section>

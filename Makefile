@@ -1,5 +1,5 @@
 # ===================================================================
-# CaseLens — Development Makefile
+# CaseIntelix — Development Makefile
 # ===================================================================
 
 .PHONY: setup dev test lint typecheck migrate seed verify clean help

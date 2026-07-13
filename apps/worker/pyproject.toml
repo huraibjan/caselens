@@ -1,7 +1,7 @@
 [project]
 name = "caselens-worker"
 version = "0.1.0"
-description = "CaseLens Document Processing Worker"
+description = "CaseIntelix Document Processing Worker"
 requires-python = ">=3.12"
 dependencies = [
     "temporalio>=1.9.0",

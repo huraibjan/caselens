@@ -1,6 +1,6 @@
 ---
 name: frontend-development
-description: Next.js App Router frontend development with TypeScript, React 19, shadcn/ui, and Tailwind CSS for the CaseLens legal platform.
+description: Next.js App Router frontend development with TypeScript, React 19, shadcn/ui, and Tailwind CSS for the CaseIntelix legal platform.
 ---
 
 # Frontend Development Skill

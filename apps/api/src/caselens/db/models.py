@@ -1,4 +1,4 @@
-"""All SQLAlchemy ORM models for the CaseLens platform (Phase 1)."""
+"""All SQLAlchemy ORM models for the CaseIntelix platform (Phase 1)."""
 
 import enum
 import uuid

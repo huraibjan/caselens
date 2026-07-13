@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CaseLens · AI-Powered Legal Intelligence Platform",
+  title: "CaseIntelix · AI-Powered Legal Intelligence Platform",
   description:
-    "CaseLens analyzes case documents, generates AI judgments with citations, tracks matters, and drafts legal letters — in one secure, grounded workspace for legal professionals.",
+    "CaseIntelix analyzes case documents, generates AI judgments with citations, tracks matters, and drafts legal letters — in one secure, grounded workspace for legal professionals.",
 };
 
 export default function RootLayout({
