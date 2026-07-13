@@ -42,6 +42,51 @@ This isn't just "call an LLM API." A few things worth a closer look:
 
 **https://caselens-web.vercel.app** — publicly deployed on **$0/month** infrastructure (see [`docs/DEPLOYMENT_FREE_HOSTING.md`](docs/DEPLOYMENT_FREE_HOSTING.md) for exactly how). Register an account or sign in with Google, upload a PDF, and watch it get analyzed in real time.
 
+## Product tour
+
+<table>
+<tr>
+<td width="50%">
+
+**AI Judgment Engine**
+Per-charge conviction/settlement probability, risk factors, and filed allegations extracted straight from the uploaded documents.
+
+<img src="docs/screenshots/judgment.jpg" alt="AI judgment analysis with per-charge probability scoring" width="100%" />
+
+</td>
+<td width="50%">
+
+**Evidence Scoring & Contradiction Detection**
+Multi-method statistical scoring (BM25 + vector similarity + claim consistency) and automatic detection of contradictory statements across the document corpus.
+
+<img src="docs/screenshots/evidence.jpg" alt="Statistical evidence scoring and contradiction findings" width="100%" />
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**AI Counsel — Cited Q&A**
+Ask natural-language questions about a matter; suggested prompts help get started, and every answer is grounded in retrieved passages.
+
+<img src="docs/screenshots/ai-counsel.jpg" alt="AI Counsel chat interface for grounded Q&A" width="100%" />
+
+</td>
+<td width="50%">
+
+**Calendar & Deadlines**
+Hearings, filing deadlines, depositions, and court dates tracked across every matter in one place.
+
+<img src="docs/screenshots/calendar.jpg" alt="Calendar and deadlines view across matters" width="100%" />
+
+</td>
+</tr>
+</table>
+
+**AI Letter Generator** — pick a template, select a matter, and the system auto-fills the defendant, veracity score, and key dates it already extracted from your documents before drafting a complete, ready-to-review letter.
+
+<img src="docs/screenshots/letter-generator.jpg" alt="AI letter generator with template selection and auto-filled case data" width="100%" />
+
 ## Core features
 
 | Feature | Description |
