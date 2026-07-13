@@ -1,0 +1,36 @@
+{
+  "hooks": [
+    {
+      "name": "prevent-database-drop",
+      "event": "PreToolUse",
+      "tool": "run_command",
+      "condition": "command contains 'DROP DATABASE' or 'DROP SCHEMA' or 'dropdb'",
+      "action": "require_confirmation",
+      "message": "⚠️ Destructive database operation detected. This will permanently delete data. Are you sure?"
+    },
+    {
+      "name": "prevent-force-push",
+      "event": "PreToolUse",
+      "tool": "run_command",
+      "condition": "command contains 'git push --force' or 'git push -f'",
+      "action": "require_confirmation",
+      "message": "⚠️ Force push detected. This will rewrite remote history. Are you sure?"
+    },
+    {
+      "name": "prevent-rm-rf",
+      "event": "PreToolUse",
+      "tool": "run_command",
+      "condition": "command contains 'rm -rf /' or 'rm -rf ~' or 'rm -rf *'",
+      "action": "block",
+      "message": "🛑 Dangerous recursive delete blocked."
+    },
+    {
+      "name": "prevent-secret-exposure",
+      "event": "PreToolUse",
+      "tool": "write_to_file",
+      "condition": "content contains real API keys, passwords, or secrets",
+      "action": "require_confirmation",
+      "message": "⚠️ Potential secret detected in file content. Use environment variables instead."
+    }
+  ]
+}

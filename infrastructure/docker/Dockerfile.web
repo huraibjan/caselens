@@ -1,0 +1,25 @@
+FROM node:20-alpine AS base
+
+# Install pnpm
+RUN npm install -g pnpm@10.12.1
+
+WORKDIR /app
+
+# Copy root workspace configurations
+COPY package.json pnpm-workspace.yaml turbo.json ./
+COPY packages/ ./packages/
+COPY apps/web/package.json ./apps/web/
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Copy Next.js source
+COPY apps/web/ ./apps/web/
+
+# Build Next.js
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN pnpm --filter @caselens/web build
+
+EXPOSE 3000
+
+CMD ["pnpm", "--filter", "@caselens/web", "start"]

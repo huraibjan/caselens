@@ -1,0 +1,14 @@
+{
+  "name": "@caselens/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CaseLens Shared API schemas and routing contracts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

@@ -1,0 +1,78 @@
+[project]
+name = "caselens-api"
+version = "0.1.0"
+description = "CaseLens API — Legal Case Intelligence Platform"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.34.0",
+    "sqlalchemy[asyncio]>=2.0.36",
+    "asyncpg>=0.30.0",
+    "alembic>=1.14.0",
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.7.0",
+    "python-jose[cryptography]>=3.3.0",
+    "passlib[bcrypt]>=1.7.4",
+    "python-multipart>=0.0.18",
+    "httpx>=0.28.0",
+    "redis>=5.2.0",
+    "boto3>=1.36.0",
+    "pgvector>=0.3.6",
+    "pymupdf>=1.25.0",
+    "tiktoken>=0.8.0",
+    "structlog>=24.4.0",
+    "tenacity>=9.0.0",
+    "temporalio>=1.9.0",
+    "email-validator>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.25.0",
+    "pytest-cov>=6.0.0",
+    "httpx>=0.28.0",
+    "factory-boy>=3.3.0",
+    "ruff>=0.9.0",
+    "mypy>=1.14.0",
+    "types-passlib>=1.7.7",
+    "types-python-jose>=3.3.0",
+    "types-boto3>=1.36.0",
+    "types-redis>=4.6.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/caselens"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "S", "B", "A", "C4", "PT", "RET", "SIM"]
+ignore = ["S101", "B008"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["caselens"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["fitz"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+markers = [
+    "integration: marks tests that require external services",
+]
