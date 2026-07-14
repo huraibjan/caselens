@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { fetchApi } from '@/lib/api';
 import Shell from '@/components/layout/Shell';
 
 const CONTACT_ROLES = [
@@ -29,39 +30,48 @@ interface Contact {
   id: string;
   name: string;
   role: string;
-  email: string;
-  phone: string;
-  firm?: string;
-  notes?: string;
+  email?: string | null;
+  phone?: string | null;
+  firm?: string | null;
+  notes?: string | null;
 }
 
-// Demo contacts — in production these come from the contacts API
-const DEMO_CONTACTS: Contact[] = [
-  { id: '1', name: 'James A. Worthington', role: 'client',           email: 'j.worthington@email.com', phone: '(212) 555-0182', firm: 'Self' },
-  { id: '2', name: 'Rachel Kim',           role: 'opposing_counsel', email: 'rkim@hartleylaw.com',     phone: '(646) 555-0234', firm: 'Hartley & Associates' },
-  { id: '3', name: 'Dr. Samuel Greene',    role: 'expert',           email: 's.greene@medexpert.com', phone: '(718) 555-0091', firm: 'Forensic Medical Group' },
-  { id: '4', name: 'Judge Patricia Lorne', role: 'judge',            email: '',                       phone: '',              firm: 'NY Supreme Court' },
-  { id: '5', name: 'Maria Santos',         role: 'witness',          email: 'msantos@email.com',      phone: '(347) 555-0157' },
-];
-
 export default function Contacts() {
-  const [contacts, setContacts] = useState<Contact[]>(DEMO_CONTACTS);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
   const [filterRole, setFilterRole] = useState('all');
   const [form, setForm] = useState({ name: '', role: 'client', email: '', phone: '', firm: '', notes: '' });
 
-  const handleCreate = (e: React.FormEvent) => {
+  const load = async () => {
+    try { setContacts(await fetchApi('/api/v1/contacts')); }
+    catch (e) { console.error(e); }
+    finally { setLoading(false); }
+  };
+  useEffect(() => { load(); }, []);
+
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    const nc: Contact = { ...form, id: Date.now().toString() };
-    setContacts([nc, ...contacts]);
-    setForm({ name: '', role: 'client', email: '', phone: '', firm: '', notes: '' });
-    setShowCreate(false);
+    setSaving(true);
+    try {
+      await fetchApi('/api/v1/contacts', { method: 'POST', body: JSON.stringify(form) });
+      setForm({ name: '', role: 'client', email: '', phone: '', firm: '', notes: '' });
+      setShowCreate(false);
+      await load();
+    } catch (err) { console.error(err); }
+    finally { setSaving(false); }
+  };
+
+  const handleDelete = async (id: string) => {
+    setContacts(cs => cs.filter(c => c.id !== id));
+    try { await fetchApi(`/api/v1/contacts/${id}`, { method: 'DELETE' }); } catch (e) { console.error(e); load(); }
   };
 
   const filtered = contacts.filter(c => {
     if (filterRole !== 'all' && c.role !== filterRole) return false;
-    if (search && !c.name.toLowerCase().includes(search.toLowerCase()) && !c.email.toLowerCase().includes(search.toLowerCase())) return false;
+    if (search && !c.name.toLowerCase().includes(search.toLowerCase()) && !(c.email || '').toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
 
@@ -117,7 +127,7 @@ export default function Contacts() {
                 </div>
               </div>
               <div className="flex gap-3">
-                <button type="submit" className="btn-primary">Add Contact</button>
+                <button type="submit" disabled={saving} className="btn-primary disabled:opacity-50">{saving ? 'Saving…' : 'Add Contact'}</button>
                 <button type="button" onClick={() => setShowCreate(false)} className="btn-ghost">Cancel</button>
               </div>
             </form>
@@ -149,10 +159,12 @@ export default function Contacts() {
         </div>
 
         {/* Contact Cards */}
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="card p-12 text-center text-sm" style={{ color: '#94A3B8' }}>Loading contacts…</div>
+        ) : filtered.length === 0 ? (
           <div className="card p-12 text-center">
-            <div className="text-4xl mb-3">👤</div>
-            <p className="font-semibold" style={{ color: '#475569' }}>No contacts found.</p>
+            <p className="font-semibold" style={{ color: '#475569' }}>{contacts.length === 0 ? 'No contacts yet' : 'No contacts match your filters'}</p>
+            <p className="text-sm mt-1" style={{ color: '#94A3B8' }}>{contacts.length === 0 ? 'Add your first contact to get started.' : 'Try adjusting search or role filter.'}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -172,6 +184,10 @@ export default function Contacts() {
                     <span className="chip shrink-0" style={{ background: rs.bg, color: rs.color, border: `1px solid ${rs.border}`, fontSize: '10.5px' }}>
                       {roleLabel(contact.role)}
                     </span>
+                    <button onClick={() => handleDelete(contact.id)} title="Delete contact"
+                      className="shrink-0 text-slate-300 hover:text-red-500 transition-colors">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
                   </div>
                   {(contact.email || contact.phone) && (
                     <div className="space-y-1 pt-2" style={{ borderTop: '1px solid #F1F5F9' }}>

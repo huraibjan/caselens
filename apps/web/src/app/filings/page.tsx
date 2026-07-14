@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { fetchApi } from '@/lib/api';
 import Shell from '@/components/layout/Shell';
 
 const FILING_TYPES = [
@@ -28,43 +29,86 @@ const STATUS_STYLES: Record<string, { bg: string; color: string; border: string 
 interface Filing {
   id: string;
   title: string;
-  type: string;
-  matter: string;
+  type: string;              // filing_type
+  matter: string;            // matter_title for display
+  matter_id?: string | null;
   status: 'filed' | 'pending' | 'overdue' | 'draft';
-  filed_at?: string;
-  due_at?: string;
-  notes?: string;
+  filed_at?: string | null;
+  due_at?: string | null;
+  notes?: string | null;
 }
 
-const DEMO_FILINGS: Filing[] = [
-  { id: '1', title: 'Motion to Suppress Weapon Evidence', type: 'Motion to Dismiss', matter: 'People v. Johnson', status: 'filed', filed_at: '2026-06-28', due_at: '2026-06-28' },
-  { id: '2', title: 'Answer to Amended Complaint', type: 'Answer / Response', matter: 'Smith Lease Dispute', status: 'pending', due_at: '2026-07-15' },
-  { id: '3', title: 'Exhibit Bundle A — Medical Records', type: 'Exhibit Filing', matter: 'Smith v. Allstate', status: 'filed', filed_at: '2026-07-01', due_at: '2026-07-01' },
-  { id: '4', title: 'Notice of Appeal', type: 'Notice of Appeal', matter: 'Rivera Real Estate', status: 'overdue', due_at: '2026-07-08' },
-  { id: '5', title: 'Plea Agreement Draft', type: 'Plea Agreement', matter: 'People v. Johnson', status: 'draft' },
-];
+// Derive a display status: a pending filing past its due date reads as "overdue".
+function displayStatus(f: Filing): Filing['status'] {
+  if (f.status === 'pending' && f.due_at) {
+    const due = new Date(f.due_at);
+    if (due < new Date()) return 'overdue';
+  }
+  return f.status;
+}
 
 export default function Filings() {
-  const [filings, setFilings] = useState<Filing[]>(DEMO_FILINGS);
+  const [filings, setFilings] = useState<Filing[]>([]);
+  const [matters, setMatters] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [filterStatus, setFilterStatus] = useState('all');
   const [search, setSearch] = useState('');
-  const [form, setForm] = useState({ title: '', type: FILING_TYPES[0], matter: '', status: 'draft' as Filing['status'], due_at: '', notes: '' });
+  const [form, setForm] = useState({ title: '', type: FILING_TYPES[0], matter_id: '', status: 'draft' as Filing['status'], due_at: '', notes: '' });
 
-  const handleCreate = (e: React.FormEvent) => {
+  const load = async () => {
+    try {
+      const [fs, ms] = await Promise.all([
+        fetchApi('/api/v1/filings'),
+        fetchApi('/api/v1/matters').then(r => r.items || []).catch(() => []),
+      ]);
+      setFilings((fs || []).map((f: any) => ({
+        id: f.id, title: f.title, type: f.filing_type, status: f.status,
+        matter: f.matter_title || '', matter_id: f.matter_id,
+        filed_at: f.filed_at ? f.filed_at.slice(0, 10) : null,
+        due_at: f.due_at ? f.due_at.slice(0, 10) : null, notes: f.notes,
+      })));
+      setMatters(ms);
+    } catch (err) { console.error(err); }
+    finally { setLoading(false); }
+  };
+  useEffect(() => { load(); }, []);
+
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    setFilings([{ ...form, id: Date.now().toString() }, ...filings]);
-    setForm({ title: '', type: FILING_TYPES[0], matter: '', status: 'draft', due_at: '', notes: '' });
-    setShowCreate(false);
+    setSaving(true);
+    try {
+      await fetchApi('/api/v1/filings', { method: 'POST', body: JSON.stringify({
+        title: form.title, filing_type: form.type, status: form.status,
+        matter_id: form.matter_id || null, notes: form.notes || null,
+        due_at: form.due_at ? new Date(form.due_at + 'T00:00:00').toISOString() : null,
+        filed_at: form.status === 'filed' && form.due_at ? new Date(form.due_at + 'T00:00:00').toISOString() : null,
+      }) });
+      setForm({ title: '', type: FILING_TYPES[0], matter_id: '', status: 'draft', due_at: '', notes: '' });
+      setShowCreate(false);
+      await load();
+    } catch (err) { console.error(err); }
+    finally { setSaving(false); }
+  };
+
+  const handleDelete = async (id: string) => {
+    setFilings(fs => fs.filter(f => f.id !== id));
+    try { await fetchApi(`/api/v1/filings/${id}`, { method: 'DELETE' }); } catch (e) { console.error(e); load(); }
   };
 
   const filtered = filings.filter(f => {
-    if (filterStatus !== 'all' && f.status !== filterStatus) return false;
+    if (filterStatus !== 'all' && displayStatus(f) !== filterStatus) return false;
     if (search && !f.title.toLowerCase().includes(search.toLowerCase()) && !f.matter.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
 
-  const counts = { total: filings.length, filed: filings.filter(f => f.status === 'filed').length, pending: filings.filter(f => f.status === 'pending').length, overdue: filings.filter(f => f.status === 'overdue').length };
+  const counts = {
+    total: filings.length,
+    filed: filings.filter(f => displayStatus(f) === 'filed').length,
+    pending: filings.filter(f => displayStatus(f) === 'pending').length,
+    overdue: filings.filter(f => displayStatus(f) === 'overdue').length,
+  };
 
   return (
     <Shell>
@@ -114,7 +158,10 @@ export default function Filings() {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wider" style={{ color: '#64748B' }}>Matter</label>
-                  <input className="input-base" value={form.matter} onChange={e => setForm({...form, matter: e.target.value})} placeholder="People v. Johnson" />
+                  <select className="input-base" value={form.matter_id} onChange={e => setForm({...form, matter_id: e.target.value})}>
+                    <option value="">— None —</option>
+                    {matters.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wider" style={{ color: '#64748B' }}>Status</label>
@@ -134,7 +181,7 @@ export default function Filings() {
                 </div>
               </div>
               <div className="flex gap-3">
-                <button type="submit" className="btn-primary">Save Filing</button>
+                <button type="submit" disabled={saving} className="btn-primary disabled:opacity-50">{saving ? 'Saving…' : 'Save Filing'}</button>
                 <button type="button" onClick={() => setShowCreate(false)} className="btn-ghost">Cancel</button>
               </div>
             </form>
@@ -171,12 +218,15 @@ export default function Filings() {
               </tr>
             </thead>
             <tbody>
-              {filtered.length === 0 ? (
-                <tr><td colSpan={5} className="text-center py-10" style={{ color: '#94A3B8' }}>No filings found.</td></tr>
+              {loading ? (
+                <tr><td colSpan={5} className="text-center py-10" style={{ color: '#94A3B8' }}>Loading filings…</td></tr>
+              ) : filtered.length === 0 ? (
+                <tr><td colSpan={5} className="text-center py-10" style={{ color: '#94A3B8' }}>{filings.length === 0 ? 'No filings yet — add a motion, pleading, or exhibit.' : 'No filings match your filters.'}</td></tr>
               ) : (
                 filtered.map(f => {
-                  const ss = STATUS_STYLES[f.status];
-                  const date = f.status === 'filed' ? f.filed_at : f.due_at;
+                  const ds = displayStatus(f);
+                  const ss = STATUS_STYLES[ds];
+                  const date = ds === 'filed' ? f.filed_at : f.due_at;
                   return (
                     <tr key={f.id}>
                       <td>
@@ -184,12 +234,15 @@ export default function Filings() {
                         {f.notes && <div className="text-xs mt-0.5" style={{ color: '#94A3B8' }}>{f.notes}</div>}
                       </td>
                       <td className="text-sm" style={{ color: '#475569' }}>{f.type}</td>
-                      <td className="text-sm font-medium" style={{ color: '#1E40AF' }}>{f.matter}</td>
+                      <td className="text-sm font-medium" style={{ color: '#1E40AF' }}>{f.matter || '—'}</td>
                       <td className="text-sm" style={{ color: '#475569' }}>{date || '—'}</td>
                       <td>
-                        <span className="chip capitalize" style={{ background: ss.bg, color: ss.color, border: `1px solid ${ss.border}`, fontSize: '11px' }}>
-                          {f.status}
-                        </span>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="chip capitalize" style={{ background: ss.bg, color: ss.color, border: `1px solid ${ss.border}`, fontSize: '11px' }}>{ds}</span>
+                          <button onClick={() => handleDelete(f.id)} title="Delete filing" className="text-slate-300 hover:text-red-500 shrink-0">
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

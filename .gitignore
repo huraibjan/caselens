@@ -91,3 +91,7 @@ blob-report/
 .turbo/
 # Personal notes (not part of the project)
 linkedin-post.md
+
+# Local AI-agent skills & lockfile (developer tooling, not app code)
+.claude/skills/
+skills-lock.json

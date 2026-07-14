@@ -84,7 +84,7 @@ export default function MatterDashboard({ params }: { params: Promise<{ id: stri
         const st = (d.status || '').toLowerCase();
         if (st === 'ready') {
           clearInterval(t);
-          router.push(`/matters/${matterId}/documents/${docId}`);
+          router.push(`/matters/${matterId}/workspace`);
         } else if (st === 'error') {
           clearInterval(t);
           await loadData();
@@ -222,7 +222,7 @@ export default function MatterDashboard({ params }: { params: Promise<{ id: stri
                   return (
                     <div key={doc.id}
                       className="card p-4 flex items-center gap-4 card-hover"
-                      onClick={() => router.push(`/matters/${matterId}/documents/${doc.id}`)}
+                      onClick={() => router.push(`/matters/${matterId}/workspace`)}
                     >
                       {/* File icon */}
                       <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0"

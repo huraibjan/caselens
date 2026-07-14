@@ -507,3 +507,58 @@ class FeatureFlag(Base, UUIDMixin, TimestampMixin):
     description: Mapped[str | None] = mapped_column(Text)
     is_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     conditions: Mapped[dict[str, Any] | None] = mapped_column(JSONB, default=dict)
+
+
+# ── Practice Management: Contacts, Calendar, Filings ───────────────
+
+
+class Contact(Base, UUIDMixin, TimestampMixin, TenantMixin):
+    """A person or party involved across matters (client, counsel, expert, etc.)."""
+
+    __tablename__ = "contacts"
+    __table_args__ = (Index("ix_contacts_org", "organization_id"),)
+
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    role: Mapped[str] = mapped_column(String(50), nullable=False, default="client")
+    email: Mapped[str | None] = mapped_column(String(320))
+    phone: Mapped[str | None] = mapped_column(String(50))
+    firm: Mapped[str | None] = mapped_column(String(255))
+    notes: Mapped[str | None] = mapped_column(Text)
+    matter_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("matters.id", ondelete="SET NULL")
+    )
+
+
+class CalendarEvent(Base, UUIDMixin, TimestampMixin, TenantMixin):
+    """A hearing, deadline, meeting, filing date or deposition."""
+
+    __tablename__ = "calendar_events"
+    __table_args__ = (Index("ix_calendar_events_org_date", "organization_id", "event_date"),)
+
+    title: Mapped[str] = mapped_column(String(500), nullable=False)
+    event_type: Mapped[str] = mapped_column(String(30), nullable=False, default="hearing")
+    event_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    event_time: Mapped[str | None] = mapped_column(String(20))
+    location: Mapped[str | None] = mapped_column(String(255))
+    notes: Mapped[str | None] = mapped_column(Text)
+    urgent: Mapped[bool] = mapped_column(Boolean, default=False)
+    matter_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("matters.id", ondelete="SET NULL")
+    )
+
+
+class Filing(Base, UUIDMixin, TimestampMixin, TenantMixin):
+    """A court filing / pleading / exhibit tracked against a matter."""
+
+    __tablename__ = "filings"
+    __table_args__ = (Index("ix_filings_org", "organization_id"),)
+
+    title: Mapped[str] = mapped_column(String(500), nullable=False)
+    filing_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="draft")
+    filed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    notes: Mapped[str | None] = mapped_column(Text)
+    matter_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("matters.id", ondelete="SET NULL")
+    )

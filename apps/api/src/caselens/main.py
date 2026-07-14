@@ -15,6 +15,11 @@ from caselens.documents.router import router as documents_router
 from caselens.documents.upload import router as upload_router
 from caselens.matters.router import router as matters_router
 from caselens.organizations.router import router as org_router
+from caselens.practice.router import (
+    calendar_router,
+    contacts_router,
+    filings_router,
+)
 from caselens.rag.router import router as rag_router
 from caselens.search.router import router as search_router
 
@@ -58,6 +63,9 @@ def create_app() -> FastAPI:
     app.include_router(search_router, prefix="/api/v1", tags=["Search"])
     app.include_router(rag_router, prefix="/api/v1", tags=["RAG"])
     app.include_router(audit_router, prefix="/api/v1/audit-events", tags=["Audit"])
+    app.include_router(contacts_router, prefix="/api/v1/contacts", tags=["Contacts"])
+    app.include_router(calendar_router, prefix="/api/v1/calendar-events", tags=["Calendar"])
+    app.include_router(filings_router, prefix="/api/v1/filings", tags=["Filings"])
 
     @app.get("/api/v1/health", tags=["Health"])
     async def health_check() -> dict[str, Any]:

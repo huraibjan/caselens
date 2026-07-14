@@ -1,8 +1,113 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { fetchApi } from '@/lib/api';
 import Shell from '@/components/layout/Shell';
+
+/* ── Drop-a-file quick start (no matter form) ────────────────── */
+function QuickStart() {
+  const router = useRouter();
+  const [stage, setStage] = useState<'idle' | 'uploading' | 'analyzing' | 'confirm' | 'error'>('idle');
+  const [name, setName] = useState('');
+  const [matterId, setMatterId] = useState('');
+  const [dragOver, setDragOver] = useState(false);
+  const [err, setErr] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const start = async (file: File) => {
+    setErr('');
+    setStage('uploading');
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetchApi('/api/v1/matters/quick-upload', { method: 'POST', body: fd });
+      setMatterId(res.matter_id);
+      setName(res.matter_title);
+      setStage('analyzing');
+      poll(res.matter_id, res.document_id);
+    } catch (e: any) {
+      setErr(e.message || 'Upload failed.');
+      setStage('error');
+    }
+  };
+
+  const poll = (mid: string, docId: string) => {
+    let ticks = 0;
+    const t = setInterval(async () => {
+      ticks += 1;
+      if (ticks > 60) { clearInterval(t); return; }
+      try {
+        const d = await fetchApi(`/api/v1/documents/${docId}`);
+        const st = (d.status || '').toLowerCase();
+        if (st === 'ready') {
+          clearInterval(t);
+          const m = await fetchApi(`/api/v1/matters/${mid}`).catch(() => null);
+          if (m?.title) setName(m.title);
+          setStage('confirm');
+        } else if (st === 'error') {
+          clearInterval(t);
+          setErr('The document could not be analysed. You can still open it and retry.');
+          setStage('confirm');
+        }
+      } catch { /* keep polling */ }
+    }, 3000);
+  };
+
+  const open = async () => {
+    const t = name.trim();
+    if (t) { try { await fetchApi(`/api/v1/matters/${matterId}`, { method: 'PATCH', body: JSON.stringify({ title: t }) }); } catch { /* ignore */ } }
+    router.push(`/matters/${matterId}/workspace`);
+  };
+
+  if (stage === 'analyzing' || stage === 'uploading') {
+    return (
+      <div className="card p-6 flex items-center gap-4">
+        <div className="w-6 h-6 rounded-full border-2 border-slate-200 border-t-slate-700 animate-spin shrink-0" />
+        <div>
+          <div className="text-sm font-semibold text-slate-800">{stage === 'uploading' ? 'Uploading…' : 'Reading & analysing the case…'}</div>
+          <div className="text-xs text-slate-500 mt-0.5">Detecting parties, area of law, issues and timeline. This takes a few seconds.</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (stage === 'confirm') {
+    return (
+      <div className="card p-6">
+        <div className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-2">Confirm case name</div>
+        {err && <div className="text-xs text-amber-700 mb-2">{err}</div>}
+        <div className="flex flex-col sm:flex-row gap-2">
+          <input value={name} onChange={e => setName(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') open(); }}
+            className="input-base flex-1" placeholder="Case name" autoFocus />
+          <button onClick={open} className="btn-primary shrink-0">Open case →</button>
+        </div>
+        <p className="text-xs text-slate-400 mt-2">Detected from the document — edit if needed.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+      onDragLeave={() => setDragOver(false)}
+      onDrop={e => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files?.[0]; if (f) start(f); }}
+      onClick={() => inputRef.current?.click()}
+      className={`rounded-xl border-2 border-dashed px-6 py-8 text-center cursor-pointer transition-colors ${
+        dragOver ? 'border-slate-400 bg-slate-50' : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
+      }`}
+    >
+      <svg className="w-7 h-7 mx-auto text-slate-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 16V4m0 0L8 8m4-4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" /></svg>
+      <div className="text-sm font-semibold text-slate-800">Drop a case file to start</div>
+      <div className="text-xs text-slate-500 mt-1">PDF, Word or text — the matter is created and analysed automatically. No forms.</div>
+      {err && <div className="text-xs text-red-600 mt-2">{err}</div>}
+      <input ref={inputRef} type="file" accept=".pdf,.docx,.txt" className="hidden"
+        onChange={e => { const f = e.target.files?.[0]; if (f) start(f); }} />
+    </div>
+  );
+}
 
 const PRACTICE_AREAS = [
   { value: 'criminal',    label: 'Criminal Law',      badge: 'badge-criminal' },
@@ -104,11 +209,13 @@ export default function Matters() {
             <h2 className="text-2xl font-black" style={{ color: '#0F172A' }}>Legal Matters</h2>
             <p className="text-sm mt-0.5" style={{ color: '#64748B' }}>{matters.length} total · {matters.filter(m=>m.status==='active').length} active</p>
           </div>
-          <button onClick={() => setShowCreate(!showCreate)} className="btn-primary self-start sm:self-auto">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
-            {showCreate ? 'Cancel' : 'New Matter'}
+          <button onClick={() => setShowCreate(!showCreate)} className="btn-ghost self-start sm:self-auto text-xs">
+            {showCreate ? 'Cancel' : 'Create matter manually'}
           </button>
         </div>
+
+        {/* Drop a file — primary path */}
+        <QuickStart />
 
         {/* Create Form */}
         {showCreate && (

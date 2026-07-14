@@ -1,6 +1,5 @@
 """Document upload route — attached to matters router for /matters/{id}/documents."""
 
-import hashlib
 import uuid
 
 import structlog
@@ -11,11 +10,144 @@ from caselens.config import settings
 from caselens.db.models import Document, DocumentStatus, Matter, MatterMember
 from caselens.dependencies import DbSession, OrgMember
 from caselens.documents.pipeline import dispatch_processing
-from caselens.documents.schemas import DocumentListResponse, DocumentResponse
+from caselens.documents.schemas import (
+    DocumentListResponse,
+    DocumentResponse,
+    QuickUploadResponse,
+)
 
 logger = structlog.get_logger()
 
 router = APIRouter()
+
+_ALLOWED_EXTENSIONS = (".pdf", ".docx", ".txt")
+
+
+async def _validate_and_read(file: UploadFile) -> tuple[bytes, str]:
+    """Validate the upload (type, size, PDF signature) and return (bytes, mime)."""
+    if not file.filename:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No filename provided")
+
+    # Accept by MIME type OR extension — browsers report Office/plain-text MIME
+    # types inconsistently (sometimes application/octet-stream).
+    content_type = file.content_type or "application/octet-stream"
+    ext_ok = file.filename.lower().endswith(_ALLOWED_EXTENSIONS)
+    mime_ok = content_type in settings.allowed_mime_types_list
+    if not (mime_ok or ext_ok):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Unsupported file type. Please upload a PDF, Word (.docx), or text (.txt) file.",
+        )
+
+    file_content = await file.read()
+    if len(file_content) > settings.max_upload_size_bytes:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"File size exceeds maximum of {settings.MAX_UPLOAD_SIZE_MB}MB",
+        )
+
+    is_pdf = content_type == "application/pdf" or file.filename.lower().endswith(".pdf")
+    if is_pdf and not file_content[:5] == b"%PDF-":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File does not appear to be a valid PDF",
+        )
+    return file_content, content_type
+
+
+async def _ingest_document(
+    *,
+    file: UploadFile,
+    file_content: bytes,
+    content_type: str,
+    org_id: uuid.UUID,
+    matter_id: uuid.UUID,
+    db: DbSession,
+    background_tasks: BackgroundTasks,
+) -> Document:
+    """Persist the file, create the Document row, and dispatch processing."""
+    import hashlib as _hashlib
+
+    checksum = _hashlib.sha256(file_content).hexdigest()
+    storage_key = (
+        f"orgs/{org_id}/matters/{matter_id}/documents/{uuid.uuid4()}/{file.filename}"
+    )
+
+    doc = Document(
+        organization_id=org_id,
+        matter_id=matter_id,
+        title=file.filename,
+        original_filename=file.filename,
+        mime_type=content_type,
+        file_size_bytes=len(file_content),
+        storage_key=storage_key,
+        checksum_sha256=checksum,
+        status=DocumentStatus.PENDING,
+    )
+    db.add(doc)
+    await db.flush()
+
+    from caselens.storage.backend import get_storage_backend
+    storage = get_storage_backend()
+    await storage.upload(storage_key, file_content, content_type)
+
+    # Commit now so the row is durably visible to the background task's session.
+    doc.status = DocumentStatus.PROCESSING
+    await db.commit()
+    await db.refresh(doc)
+
+    try:
+        await dispatch_processing(background_tasks, doc)
+    except Exception as e:
+        logger.error("documents.ingest.dispatch_failed", document_id=str(doc.id), error=str(e))
+        doc.status = DocumentStatus.ERROR
+        await db.commit()
+
+    return doc
+
+
+@router.post("/quick-upload", response_model=QuickUploadResponse, status_code=status.HTTP_201_CREATED)
+async def quick_upload(
+    file: UploadFile,
+    current_user: OrgMember,
+    db: DbSession,
+    background_tasks: BackgroundTasks,
+) -> QuickUploadResponse:
+    """Drop a file with no matter form — auto-creates a matter, ingests the
+    document, and analyzes it. The matter is renamed to the AI-detected case
+    caption once analysis completes (see analysis.merge_matter_metadata)."""
+    assert current_user.organization_id is not None
+
+    # Validate before creating anything, so a bad file doesn't leave an orphan matter.
+    file_content, content_type = await _validate_and_read(file)
+
+    stem = (file.filename or "Untitled").rsplit(".", 1)[0][:120]
+    matter = Matter(
+        organization_id=current_user.organization_id,
+        title=stem,
+        metadata_={"auto_named": True},
+    )
+    db.add(matter)
+    await db.flush()
+    db.add(MatterMember(matter_id=matter.id, user_id=current_user.sub, role="lead"))
+    await db.commit()
+
+    doc = await _ingest_document(
+        file=file,
+        file_content=file_content,
+        content_type=content_type,
+        org_id=current_user.organization_id,
+        matter_id=matter.id,
+        db=db,
+        background_tasks=background_tasks,
+    )
+
+    return QuickUploadResponse(
+        matter_id=matter.id,
+        document_id=doc.id,
+        matter_title=matter.title,
+        status=doc.status.value.lower(),
+    )
 
 
 @router.post(
@@ -53,82 +185,16 @@ async def upload_document(
     if not member_result.scalar_one_or_none():
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No access to this matter")
 
-    # Validate file
-    if not file.filename:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No filename provided")
-
-    # Accept by MIME type OR file extension — browsers report Office/plain-text
-    # MIME types inconsistently (sometimes application/octet-stream), so we also
-    # trust the extension for the supported set.
-    allowed_extensions = (".pdf", ".docx", ".txt")
-    content_type = file.content_type or "application/octet-stream"
-    ext_ok = file.filename.lower().endswith(allowed_extensions)
-    mime_ok = content_type in settings.allowed_mime_types_list
-    if not (mime_ok or ext_ok):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Unsupported file type. Please upload a PDF, Word (.docx), or text (.txt) file.",
-        )
-
-    # Read file content
-    file_content = await file.read()
-    file_size = len(file_content)
-
-    if file_size > settings.max_upload_size_bytes:
-        raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail=f"File size exceeds maximum of {settings.MAX_UPLOAD_SIZE_MB}MB",
-        )
-
-    # Validate PDF magic bytes (only for files claiming to be PDF)
-    is_pdf = content_type == "application/pdf" or file.filename.lower().endswith(".pdf")
-    if is_pdf and not file_content[:5] == b"%PDF-":
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="File does not appear to be a valid PDF",
-        )
-
-    # Generate checksum
-    checksum = hashlib.sha256(file_content).hexdigest()
-
-    # Generate storage key
-    storage_key = (
-        f"orgs/{current_user.organization_id}/matters/{matter_id}/"
-        f"documents/{uuid.uuid4()}/{file.filename}"
-    )
-
-    # Create document record
-    doc = Document(
-        organization_id=current_user.organization_id,
+    file_content, content_type = await _validate_and_read(file)
+    doc = await _ingest_document(
+        file=file,
+        file_content=file_content,
+        content_type=content_type,
+        org_id=current_user.organization_id,
         matter_id=matter_id,
-        title=file.filename,
-        original_filename=file.filename,
-        mime_type=content_type,
-        file_size_bytes=file_size,
-        storage_key=storage_key,
-        checksum_sha256=checksum,
-        status=DocumentStatus.PENDING,
+        db=db,
+        background_tasks=background_tasks,
     )
-    db.add(doc)
-    await db.flush()
-
-    # Store file in object storage
-    from caselens.storage.backend import get_storage_backend
-    storage = get_storage_backend()
-    await storage.upload(storage_key, file_content, content_type)
-
-    # Commit now so the row is durably visible to the background task's own
-    # DB session (inline mode) before it starts.
-    doc.status = DocumentStatus.PROCESSING
-    await db.commit()
-    await db.refresh(doc)
-
-    try:
-        await dispatch_processing(background_tasks, doc)
-    except Exception as e:
-        logger.error("documents.upload.dispatch_failed", document_id=str(doc.id), error=str(e))
-        doc.status = DocumentStatus.ERROR
-        await db.commit()
 
     return DocumentResponse(
         id=doc.id,

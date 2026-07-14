@@ -1,15 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { fetchApi } from '@/lib/api';
 import Shell from '@/components/layout/Shell';
 
 interface CalendarEvent {
   id: string;
   title: string;
-  date: string;
+  date: string;              // YYYY-MM-DD (derived from event_date)
   time?: string;
   type: 'hearing' | 'deadline' | 'meeting' | 'filing' | 'deposition';
-  matter: string;
+  matter: string;            // matter_title for display
+  matter_id?: string | null;
   location?: string;
   notes?: string;
   urgent?: boolean;
@@ -32,28 +34,52 @@ const dateStr = (offset: number) => {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 };
 
-const DEMO_EVENTS: CalendarEvent[] = [
-  { id: '1', title: 'Preliminary Hearing',       date: dateStr(2),  time: '9:00 AM',  type: 'hearing',    matter: 'People v. Johnson',     location: 'Courtroom 4B, NY Supreme',   urgent: true },
-  { id: '2', title: 'Expert Deposition',          date: dateStr(3),  time: '2:00 PM',  type: 'deposition', matter: 'Smith v. Allstate',     location: 'Law Offices of Harrison',    urgent: false },
-  { id: '3', title: 'Motion Filing Deadline',     date: dateStr(5),  time: '5:00 PM',  type: 'deadline',   matter: 'People v. Johnson',     notes: 'Motion to suppress weapon evidence', urgent: true },
-  { id: '4', title: 'Client Meeting',             date: dateStr(7),  time: '11:00 AM', type: 'meeting',    matter: 'Smith Lease Dispute',   location: 'Office Conference Room A' },
-  { id: '5', title: 'Answer Filing Deadline',     date: dateStr(10), time: '5:00 PM',  type: 'deadline',   matter: 'Rivera Real Estate',    urgent: false },
-  { id: '6', title: 'Trial Date',                 date: dateStr(21), time: '9:00 AM',  type: 'hearing',    matter: 'People v. Johnson',     location: 'Courtroom 7A, NY Supreme',   urgent: false },
-  { id: '7', title: 'Mediation Session',          date: dateStr(14), time: '1:00 PM',  type: 'meeting',    matter: 'Smith v. Allstate',     location: 'ADR Center, 40 Wall St' },
-  { id: '8', title: 'Court Filing — Exhibits',    date: dateStr(1),  time: '11:59 PM', type: 'filing',     matter: 'Rivera Real Estate',    urgent: true },
-];
-
 export default function Calendar() {
-  const [events, setEvents] = useState<CalendarEvent[]>(DEMO_EVENTS);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [matters, setMatters] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [filterType, setFilterType] = useState('all');
-  const [form, setForm] = useState({ title: '', date: dateStr(3), time: '', type: 'hearing' as CalendarEvent['type'], matter: '', location: '', notes: '' });
+  const [form, setForm] = useState({ title: '', date: dateStr(3), time: '', type: 'hearing' as CalendarEvent['type'], matter_id: '', location: '', notes: '', urgent: false });
 
-  const handleCreate = (e: React.FormEvent) => {
+  const load = async () => {
+    try {
+      const [evs, ms] = await Promise.all([
+        fetchApi('/api/v1/calendar-events'),
+        fetchApi('/api/v1/matters').then(r => r.items || []).catch(() => []),
+      ]);
+      setEvents((evs || []).map((e: any) => ({
+        id: e.id, title: e.title, type: e.event_type,
+        date: (e.event_date || '').slice(0, 10), time: e.event_time,
+        matter: e.matter_title || '', matter_id: e.matter_id,
+        location: e.location, notes: e.notes, urgent: e.urgent,
+      })));
+      setMatters(ms);
+    } catch (err) { console.error(err); }
+    finally { setLoading(false); }
+  };
+  useEffect(() => { load(); }, []);
+
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    setEvents([{ ...form, id: Date.now().toString() }, ...events]);
-    setForm({ title: '', date: dateStr(3), time: '', type: 'hearing', matter: '', location: '', notes: '' });
-    setShowCreate(false);
+    setSaving(true);
+    try {
+      await fetchApi('/api/v1/calendar-events', { method: 'POST', body: JSON.stringify({
+        title: form.title, event_type: form.type, event_date: new Date(form.date + 'T00:00:00').toISOString(),
+        event_time: form.time || null, location: form.location || null, notes: form.notes || null,
+        urgent: form.urgent, matter_id: form.matter_id || null,
+      }) });
+      setForm({ title: '', date: dateStr(3), time: '', type: 'hearing', matter_id: '', location: '', notes: '', urgent: false });
+      setShowCreate(false);
+      await load();
+    } catch (err) { console.error(err); }
+    finally { setSaving(false); }
+  };
+
+  const handleDelete = async (id: string) => {
+    setEvents(es => es.filter(e => e.id !== id));
+    try { await fetchApi(`/api/v1/calendar-events/${id}`, { method: 'DELETE' }); } catch (e) { console.error(e); load(); }
   };
 
   const sorted = [...events].sort((a, b) => a.date.localeCompare(b.date));
@@ -120,7 +146,10 @@ export default function Calendar() {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wider" style={{ color: '#64748B' }}>Matter</label>
-                  <input className="input-base" value={form.matter} onChange={e => setForm({...form, matter: e.target.value})} placeholder="People v. Johnson" />
+                  <select className="input-base" value={form.matter_id} onChange={e => setForm({...form, matter_id: e.target.value})}>
+                    <option value="">— None —</option>
+                    {matters.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}
+                  </select>
                 </div>
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wider" style={{ color: '#64748B' }}>Location</label>
@@ -130,9 +159,13 @@ export default function Calendar() {
                   <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wider" style={{ color: '#64748B' }}>Notes</label>
                   <input className="input-base" value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} placeholder="Bring exhibits…" />
                 </div>
+                <label className="flex items-center gap-2 text-sm text-slate-600 sm:col-span-3">
+                  <input type="checkbox" checked={form.urgent} onChange={e => setForm({...form, urgent: e.target.checked})} />
+                  Mark as urgent
+                </label>
               </div>
               <div className="flex gap-3">
-                <button type="submit" className="btn-primary">Add Event</button>
+                <button type="submit" disabled={saving} className="btn-primary disabled:opacity-50">{saving ? 'Saving…' : 'Add Event'}</button>
                 <button type="button" onClick={() => setShowCreate(false)} className="btn-ghost">Cancel</button>
               </div>
             </form>
@@ -211,8 +244,10 @@ export default function Calendar() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.length === 0 ? (
-                    <tr><td colSpan={4} className="text-center py-10" style={{ color: '#94A3B8' }}>No events found.</td></tr>
+                  {loading ? (
+                    <tr><td colSpan={4} className="text-center py-10" style={{ color: '#94A3B8' }}>Loading events…</td></tr>
+                  ) : filtered.length === 0 ? (
+                    <tr><td colSpan={4} className="text-center py-10" style={{ color: '#94A3B8' }}>{events.length === 0 ? 'No events yet — add your first deadline or hearing.' : 'No events match this filter.'}</td></tr>
                   ) : (
                     filtered.map(ev => {
                       const s = EVENT_STYLES[ev.type];
@@ -237,7 +272,14 @@ export default function Calendar() {
                               {s.label}
                             </span>
                           </td>
-                          <td className="text-sm" style={{ color: '#475569' }}>{ev.matter}</td>
+                          <td className="text-sm" style={{ color: '#475569' }}>
+                            <div className="flex items-center justify-between gap-2">
+                              <span>{ev.matter || '—'}</span>
+                              <button onClick={() => handleDelete(ev.id)} title="Delete event" className="text-slate-300 hover:text-red-500 shrink-0">
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                              </button>
+                            </div>
+                          </td>
                         </tr>
                       );
                     })

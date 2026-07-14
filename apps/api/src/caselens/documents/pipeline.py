@@ -27,7 +27,7 @@ from caselens.db.models import (
     Matter,
 )
 from caselens.db.session import async_session_factory
-from caselens.documents.analysis import run_case_analysis
+from caselens.documents.analysis import merge_matter_metadata, run_case_analysis
 from caselens.storage.backend import get_storage_backend
 
 logger = structlog.get_logger()
@@ -239,8 +239,10 @@ async def _analyze(document_id: uuid.UUID) -> None:
         matter_result = await session.execute(select(Matter).where(Matter.id == doc.matter_id))
         matter = matter_result.scalar_one_or_none()
         if matter:
-            # Merge so user-set fields (e.g. practice_area) survive AI analysis
-            matter.metadata_ = {**(matter.metadata_ or {}), **metadata_dict}
+            merged, new_title = merge_matter_metadata(matter.metadata_, metadata_dict)
+            matter.metadata_ = merged
+            if new_title:
+                matter.title = new_title
 
         await session.commit()
 

@@ -89,6 +89,7 @@ CASE_INTELLIGENCE_SCHEMA: dict[str, Any] = {
 DEEP_ANALYSIS_SCHEMA: dict[str, Any] = {
     "type": "OBJECT",
     "properties": {
+        "case_title": {"type": "STRING"},
         "parties": {
             "type": "ARRAY",
             "items": {
@@ -207,10 +208,11 @@ LEGAL_SYSTEM_PROMPT = (
 
 def build_summary_prompt(title: str, text: str) -> str:
     return (
-        "You are a professional legal RAG assistant. Read the following legal "
-        "document content and write a highly detailed, production-ready legal "
-        "intelligence summary. Analyze the key facts, the legal issues, the "
-        "parties, and the holding/conclusions. Be thorough and professional.\n\n"
+        "Write a concise legal case brief (2–4 short paragraphs of plain prose, "
+        "no markdown tables, no headings, no bullet lists). Open by stating what "
+        "the matter is and who the parties are, then the core facts, the central "
+        "legal issue(s), and the current posture or likely direction. Write for a "
+        "practising lawyer — precise, sober, no filler. Do not invent facts.\n\n"
         f"Document Title: {title}\n\nDocument Text:\n{text[:INTEL_TEXT_LIMIT]}"
     )
 
@@ -230,6 +232,10 @@ def build_deep_prompt(title: str, text: str) -> str:
     return (
         "Perform a deep structured legal analysis of this case document and "
         "return ONLY a JSON object with these keys:\n\n"
+        "0. case_title — the short style of cause / case caption (e.g. 'The "
+        "People v. John Doe', 'Ali v. Bank of Punjab'). Derive it from the "
+        "parties even if the document does not state a caption. Keep it under 80 "
+        "characters.\n"
         "1. parties[] — every party involved. For each: name (as written), role "
         f"(exactly one of: {PARTY_ROLES}), side ('claimant', 'respondent', or "
         "'neutral'), and a one-line description. Identify the correct legal role "
@@ -318,3 +324,59 @@ async def run_case_analysis(
     metadata.update(deep)
     metadata["analysis_version"] = ANALYSIS_VERSION
     return summary_resp.content, metadata
+
+
+# Loose mapping of AI area-of-law labels → the frontend practice-area tokens.
+_AREA_TOKENS = {
+    "criminal": "criminal",
+    "civil": "civil",
+    "family": "family",
+    "constitutional": "constitutional",
+    "corporate": "corporate",
+    "company": "corporate",
+    "commercial": "corporate",
+    "property": "realestate",
+    "real estate": "realestate",
+    "revenue": "revenue",
+    "tax": "revenue",
+    "labour": "labour",
+    "labor": "labour",
+    "immigration": "immigration",
+    "personal injury": "injury",
+}
+
+
+def _area_token(primary: str | None) -> str | None:
+    if not primary:
+        return None
+    p = primary.strip().lower()
+    for key, token in _AREA_TOKENS.items():
+        if key in p:
+            return token
+    return None
+
+
+def merge_matter_metadata(
+    existing: dict[str, Any] | None, metadata: dict[str, Any]
+) -> tuple[dict[str, Any], str | None]:
+    """Merge AI metadata into the matter's metadata, preserving user fields.
+
+    Returns (merged_metadata, new_title_or_None). When the matter was created by
+    a direct 'drop a file' upload (flagged `auto_named`), the AI-detected
+    case_title becomes the matter title and the practice area is inferred once,
+    then the flag is cleared so later re-analysis never renames a user's matter.
+    """
+    merged = {**(existing or {}), **metadata}
+    new_title: str | None = None
+
+    if merged.get("auto_named"):
+        title = (metadata.get("case_title") or "").strip()
+        if title:
+            new_title = title[:500]
+        area = merged.get("area_of_law") or {}
+        token = _area_token(area.get("primary"))
+        if token:
+            merged["practice_area"] = token
+        merged.pop("auto_named", None)
+
+    return merged, new_title

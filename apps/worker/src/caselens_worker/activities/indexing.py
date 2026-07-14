@@ -12,7 +12,7 @@ from sqlalchemy import select
 from caselens.ai_gateway.providers import AllProvidersFailedError
 from caselens.db.session import async_session_factory
 from caselens.db.models import Document, DocumentStatus
-from caselens.documents.analysis import run_case_analysis
+from caselens.documents.analysis import merge_matter_metadata, run_case_analysis
 
 logger = structlog.get_logger()
 
@@ -82,8 +82,10 @@ async def index_document(document_id_str: str) -> dict:
             )
             matter = result_matter.scalar_one_or_none()
             if matter:
-                # Merge so user-set fields (e.g. practice_area) survive analysis
-                matter.metadata_ = {**(matter.metadata_ or {}), **metadata_dict}
+                merged, new_title = merge_matter_metadata(matter.metadata_, metadata_dict)
+                matter.metadata_ = merged
+                if new_title:
+                    matter.title = new_title
 
             await session.commit()
 

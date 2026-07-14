@@ -71,3 +71,12 @@ class PageListResponse(BaseModel):
     document_id: uuid.UUID
     total_pages: int
     pages: list[PageContentResponse]
+
+
+class QuickUploadResponse(BaseModel):
+    """Result of a 'drop a file' upload that auto-creates its matter."""
+
+    matter_id: uuid.UUID
+    document_id: uuid.UUID
+    matter_title: str
+    status: str
