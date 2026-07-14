@@ -148,7 +148,7 @@ export default function TermsPage() {
       <section>
         <h2>13. Contact</h2>
         <p>
-          Questions about these Terms? Contact <a href="mailto:legal@caselens.app">legal@caselens.app</a>.
+          Questions about these Terms? Contact <a href="mailto:huraib123@gmail.com">huraib123@gmail.com</a>.
         </p>
       </section>
     </LegalPage>

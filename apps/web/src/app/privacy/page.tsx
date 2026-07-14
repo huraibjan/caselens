@@ -152,7 +152,7 @@ export default function PrivacyPage() {
       <section>
         <h2>11. Contact</h2>
         <p>
-          Questions about privacy? Contact <a href="mailto:privacy@caselens.app">privacy@caselens.app</a>.
+          Questions about privacy? Contact <a href="mailto:huraib123@gmail.com">huraib123@gmail.com</a>.
         </p>
       </section>
     </LegalPage>

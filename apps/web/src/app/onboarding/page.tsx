@@ -78,7 +78,7 @@ export default function Onboarding() {
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Workspace Slug (URL)</label>
             <div className="flex items-center bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-3 focus-within:border-indigo-500/60 focus-within:ring-1 focus-within:ring-indigo-500/30 transition-all">
-              <span className="text-slate-600 text-sm select-none">caselens.com/</span>
+              <span className="text-slate-600 text-sm select-none">caseintelix.com/</span>
               <input
                 type="text"
                 required

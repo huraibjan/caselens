@@ -105,7 +105,7 @@ export default function SecurityPage() {
         <h2>9. Responsible disclosure</h2>
         <p>
           If you believe you have found a security vulnerability, please report it to{' '}
-          <a href="mailto:security@caselens.app">security@caselens.app</a> with enough detail to
+          <a href="mailto:huraib123@gmail.com">huraib123@gmail.com</a> with enough detail to
           reproduce it. Please act in good faith, avoid accessing data that isn&apos;t yours, and
           give us a reasonable opportunity to remediate before public disclosure.
         </p>
