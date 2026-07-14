@@ -75,7 +75,7 @@ export default function Login() {
         {/* Background photo */}
         <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url('/login-bg.jpg')" }}
+          style={{ backgroundImage: "url('/intelix-ai.jpeg')" }}
         />
         {/* Dark brand gradient overlay for legibility */}
         <div
