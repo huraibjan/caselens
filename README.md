@@ -170,8 +170,8 @@ docs/
 **Prerequisites:** Node ≥20, Python 3.12+, [`uv`](https://docs.astral.sh/uv/), [`pnpm`](https://pnpm.io/), Docker.
 
 ```bash
-git clone https://github.com/huraibjan/caselens.git
-cd caselens
+git clone https://github.com/huraibjan/caseintelix.git
+cd caseintelix
 make setup      # installs JS + Python deps, copies .env, starts Postgres/Redis/MinIO/Temporal
 make dev        # starts the API, worker, and web dev server together
 ```
