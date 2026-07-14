@@ -44,48 +44,113 @@ This isn't just "call an LLM API." A few things worth a closer look:
 
 ## Product tour
 
+> Real screenshots from the running app.
+
+### Command center
+
+The dashboard surfaces active matters, document counts, average AI veracity score, and quick actions at a glance.
+
+<img src="docs/screenshots/dashboard.jpg" alt="CaseIntelix dashboard with matter stats and AI scores" width="100%" />
+
+### Inside a case — the AI workspace
+
+Each matter has a document library where you upload discovery files that get processed automatically (extract → chunk → embed → analyze), then opens into a six-tab intelligence workspace.
+
+<img src="docs/screenshots/matter-detail.jpg" alt="Matter detail with document library and AI-extracted allegations" width="100%" />
+
 <table>
 <tr>
 <td width="50%">
 
-**AI Judgment Engine**
-Per-charge conviction/settlement probability, risk factors, and filed allegations extracted straight from the uploaded documents.
+**Overview** — case veracity score, AI verdict, and a multi-axis assessment radar (veracity, evidence, consistency, settlement, risk).
 
-<img src="docs/screenshots/judgment.jpg" alt="AI judgment analysis with per-charge probability scoring" width="100%" />
+<img src="docs/screenshots/overview.jpg" alt="Case overview with veracity score and multi-axis radar" width="100%" />
 
 </td>
 <td width="50%">
 
-**Evidence Scoring & Contradiction Detection**
-Multi-method statistical scoring (BM25 + vector similarity + claim consistency) and automatic detection of contradictory statements across the document corpus.
+**Judgment** — per-charge conviction/settlement probability with legal reasoning and risk factors.
 
-<img src="docs/screenshots/evidence.jpg" alt="Statistical evidence scoring and contradiction findings" width="100%" />
+<img src="docs/screenshots/judgment.jpg" alt="Per-charge probability analysis" width="100%" />
 
 </td>
 </tr>
 <tr>
 <td width="50%">
 
-**AI Counsel — Cited Q&A**
-Ask natural-language questions about a matter; suggested prompts help get started, and every answer is grounded in retrieved passages.
+**Evidence** — BM25 + vector similarity + claim-consistency scoring, plus automatic contradiction detection across the document corpus.
 
-<img src="docs/screenshots/ai-counsel.jpg" alt="AI Counsel chat interface for grounded Q&A" width="100%" />
+<img src="docs/screenshots/evidence.jpg" alt="Statistical evidence scoring and contradiction findings" width="100%" />
 
 </td>
 <td width="50%">
 
-**Calendar & Deadlines**
-Hearings, filing deadlines, depositions, and court dates tracked across every matter in one place.
+**Entities** — Legal-BERT named-entity recognition extracts parties, organizations, statutes, dates, and locations from the documents.
 
-<img src="docs/screenshots/calendar.jpg" alt="Calendar and deadlines view across matters" width="100%" />
+<img src="docs/screenshots/entities.jpg" alt="Legal-BERT named entity recognition" width="100%" />
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Timeline** — a reconstructed case chronology with key dates and a duration analysis.
+
+<img src="docs/screenshots/timeline.jpg" alt="Case timeline and key dates" width="100%" />
+
+</td>
+<td width="50%">
+
+**AI Counsel** — grounded, cited Q&A over the case documents, with suggested starter prompts.
+
+<img src="docs/screenshots/ai-counsel.jpg" alt="AI Counsel cited Q&A interface" width="100%" />
 
 </td>
 </tr>
 </table>
 
-**AI Letter Generator** — pick a template, select a matter, and the system auto-fills the defendant, veracity score, and key dates it already extracted from your documents before drafting a complete, ready-to-review letter.
+### Managing the practice
 
-<img src="docs/screenshots/letter-generator.jpg" alt="AI letter generator with template selection and auto-filled case data" width="100%" />
+<table>
+<tr>
+<td width="50%">
+
+**Matters** — every case with its AI veracity score, practice area, and status.
+
+<img src="docs/screenshots/matters.jpg" alt="Legal matters list with veracity scores" width="100%" />
+
+</td>
+<td width="50%">
+
+**Analytics** — veracity-score distribution, AI verdict predictions, and practice-area breakdown across all matters.
+
+<img src="docs/screenshots/analytics.jpg" alt="Analytics and intelligence dashboard" width="100%" />
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Contacts** — clients, opposing counsel, experts, witnesses, and judges across every matter.
+
+<img src="docs/screenshots/contacts.jpg" alt="Contacts directory" width="100%" />
+
+</td>
+<td width="50%">
+
+**Calendar** — hearings, filing deadlines, depositions, and court dates in one timeline.
+
+<img src="docs/screenshots/calendar.jpg" alt="Calendar and deadlines across matters" width="100%" />
+
+</td>
+</tr>
+</table>
+
+### AI Letter Generator
+
+Pick a template, select a matter, and the system auto-fills the defendant, veracity score, and key dates it already extracted from your documents before drafting a complete, ready-to-review letter grounded in the case evidence.
+
+<img src="docs/screenshots/letter-generator.jpg" alt="AI letter generator with auto-filled case data" width="100%" />
 
 ## Core features
 
