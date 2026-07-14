@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { fetchApi } from '@/lib/api';
 import Shell from '@/components/layout/Shell';
 
@@ -168,8 +169,10 @@ export default function Workspace({ params }: { params: Promise<{ id: string }> 
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [chatLoading, setChatLoading] = useState(false);
   const [chatError, setChatError]     = useState('');
+  const [timelinePopup, setTimelinePopup] = useState<any>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const fileRef    = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   useEffect(() => { params.then(p => setMatterId(p.id)); }, [params]);
 
@@ -219,10 +222,32 @@ export default function Workspace({ params }: { params: Promise<{ id: string }> 
       const fd = new FormData();
       fd.append('file', file);
       fd.append('title', file.name.replace(/\.[^.]+$/, ''));
-      await fetchApi(`/api/v1/matters/${matterId}/documents`, { method: 'POST', body: fd });
+      const created = await fetchApi(`/api/v1/matters/${matterId}/documents`, { method: 'POST', body: fd });
       await loadDocuments();
+      // Auto-open the document reader once AI analysis completes
+      if (created?.id) watchAndOpenReader(created.id);
     } catch (err) { console.error(err); }
     finally { setUploading(false); if (fileRef.current) fileRef.current.value = ''; }
+  };
+
+  /** Poll the freshly uploaded document; when analysis is READY, open the reader. */
+  const watchAndOpenReader = (docId: string) => {
+    let ticks = 0;
+    const t = setInterval(async () => {
+      ticks += 1;
+      if (ticks > 60) { clearInterval(t); return; } // give up after ~3 min
+      try {
+        const d = await fetchApi(`/api/v1/documents/${docId}`);
+        const st = (d.status || '').toLowerCase();
+        if (st === 'ready') {
+          clearInterval(t);
+          router.push(`/matters/${matterId}/documents/${docId}`);
+        } else if (st === 'error') {
+          clearInterval(t);
+          await loadDocuments();
+        }
+      } catch { /* transient — keep polling */ }
+    }, 3000);
   };
 
   const handleAnalyze = async (docId: string) => {
@@ -277,13 +302,22 @@ export default function Workspace({ params }: { params: Promise<{ id: string }> 
     entities:               (meta?.entities || null),
   };
 
-  /* Derived entities (fallback to defaults when no NER data) */
+  /* Real deep-analysis data (analysis_version >= 2) */
+  const realParties: any[] = meta?.parties || [];
+  const realTimeline: any[] = meta?.timeline || [];
+  const areaOfLaw = meta?.area_of_law || null;
+
+  /* Derived entities (fallback to defaults when no deep-analysis data) */
   const entities = intel.entities || {
-    PERSON:   [intel.suspect, 'Presiding Judge', 'Defense Counsel'].filter(Boolean),
+    PERSON:   realParties.length > 0
+      ? realParties.map((p: any) => p.name).filter(Boolean)
+      : [intel.suspect, 'Presiding Judge', 'Defense Counsel'].filter(Boolean),
     ORG:      ['Court of Record', 'Public Defender Office'],
     DATE:     [intel.start_date, intel.end_date].filter(Boolean),
-    STATUTE:  intel.charges.map((c: Charge) => c.statute).filter(Boolean),
-    LOCATION: ['Filed Jurisdiction'],
+    STATUTE:  (areaOfLaw?.governing_statutes?.length
+      ? areaOfLaw.governing_statutes
+      : intel.charges.map((c: Charge) => c.statute)).filter(Boolean),
+    LOCATION: [areaOfLaw?.jurisdiction || 'Filed Jurisdiction'].filter(Boolean),
     MONEY:    [],
   };
 
@@ -358,6 +392,18 @@ export default function Workspace({ params }: { params: Promise<{ id: string }> 
                   </option>
                 ))}
               </select>
+            )}
+            {/* Open in document reader */}
+            {selectedDoc && (
+              <a href={`/matters/${matterId}/documents/${selectedDoc.id}`}
+                className="btn-secondary text-xs no-underline">
+                <span className="flex items-center gap-1.5">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                  Open Reader
+                </span>
+              </a>
             )}
             {/* Upload */}
             <label className="btn-secondary cursor-pointer text-xs">
@@ -812,12 +858,41 @@ export default function Workspace({ params }: { params: Promise<{ id: string }> 
                 style={{ borderLeft: '4px solid #6366F1', background: '#F5F3FF' }}>
                 <span className="text-xl">🤖</span>
                 <div>
-                  <div className="text-sm font-bold text-indigo-900">Legal-BERT Named Entity Recognition</div>
+                  <div className="text-sm font-bold text-indigo-900">AI Party &amp; Entity Recognition</div>
                   <div className="text-xs text-indigo-700 mt-0.5">
-                    Powered by <code className="bg-indigo-100 px-1 py-0.5 rounded">nlpaueb/legal-bert-base-uncased</code>. Extracts legal entities from uploaded documents.
+                    Parties, legal roles, statutes and forums extracted from the uploaded documents by the AI analysis pipeline.
                   </div>
                 </div>
               </div>
+
+              {/* Real parties with legal roles (deep analysis) */}
+              {realParties.length > 0 && (
+                <div className="card p-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <h3 className="text-sm font-bold text-slate-900">Parties &amp; Legal Roles</h3>
+                    <span className="chip bg-slate-100 text-slate-600 text-[10px]">{realParties.length}</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {realParties.map((p: any, i: number) => {
+                      const side = (p.side || '').toLowerCase();
+                      const sideCls = side === 'claimant' ? 'bg-blue-50 text-blue-800 border-blue-200'
+                        : side === 'respondent' ? 'bg-rose-50 text-rose-800 border-rose-200'
+                        : 'bg-slate-50 text-slate-600 border-slate-200';
+                      return (
+                        <div key={i} className="p-3.5 rounded-xl border border-slate-200 bg-white">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="text-sm font-bold text-slate-900 truncate">👤 {p.name}</div>
+                            <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border shrink-0 ${sideCls}`}>
+                              {p.role || p.side}
+                            </span>
+                          </div>
+                          {p.description && <div className="text-xs text-slate-500 mt-1.5 leading-relaxed">{p.description}</div>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {Object.entries(entities).map(([type, items]) =>
@@ -863,9 +938,37 @@ export default function Workspace({ params }: { params: Promise<{ id: string }> 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
                 <div className="card p-5">
-                  <h3 className="text-sm font-bold text-slate-900 mb-4">Case Timeline</h3>
+                  <div className="flex items-center gap-2 mb-4">
+                    <h3 className="text-sm font-bold text-slate-900">Case Timeline</h3>
+                    {realTimeline.length > 0 && (
+                      <span className="chip bg-blue-50 text-blue-700 border border-blue-200 text-[10px]">
+                        {realTimeline.length} events extracted · click for details
+                      </span>
+                    )}
+                  </div>
 
-                  {!intel.start_date ? (
+                  {realTimeline.length > 0 ? (
+                    /* Real event timeline from deep analysis — clickable popups */
+                    <div className="relative">
+                      <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-slate-200" />
+                      {realTimeline.map((ev: any, i: number) => (
+                        <div key={i} className="relative pl-12 pb-5">
+                          <div className="absolute left-1 w-7 h-7 rounded-full border-2 flex items-center justify-center text-sm shadow-sm bg-blue-50"
+                            style={{ borderColor: '#1E40AF', top: 2 }}>
+                            🕐
+                          </div>
+                          <button type="button" onClick={() => setTimelinePopup(ev)}
+                            className="card p-3.5 w-full text-left cursor-pointer hover:border-blue-300 hover:shadow-sm transition-all">
+                            <div className="text-[10px] font-black text-blue-700 mb-0.5">{ev.date}</div>
+                            <div className="text-sm font-semibold text-slate-800">{ev.title}</div>
+                            {Array.isArray(ev.actors) && ev.actors.length > 0 && (
+                              <div className="text-[11px] text-slate-400 mt-1 truncate">👤 {ev.actors.join(', ')}</div>
+                            )}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : !intel.start_date ? (
                     <div className="py-10 text-center">
                       <div className="text-4xl mb-3">🕐</div>
                       <p className="font-semibold text-slate-700">No timeline data extracted</p>
@@ -1038,6 +1141,50 @@ export default function Workspace({ params }: { params: Promise<{ id: string }> 
           )}
         </div>
       </div>
+
+      {/* Timeline event detail popup */}
+      {timelinePopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6"
+          onClick={() => setTimelinePopup(null)}
+          style={{ background: 'rgba(15,23,42,0.45)', backdropFilter: 'blur(4px)' }}>
+          <div className="bg-white rounded-2xl w-full max-w-lg p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="text-xs font-bold uppercase tracking-widest text-blue-700">{timelinePopup.date}</div>
+                <h3 className="text-lg font-black text-slate-900 mt-1">{timelinePopup.title}</h3>
+              </div>
+              <button type="button" onClick={() => setTimelinePopup(null)}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-700 cursor-pointer">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            {timelinePopup.description && (
+              <p className="text-sm text-slate-700 leading-relaxed mt-3">{timelinePopup.description}</p>
+            )}
+            {Array.isArray(timelinePopup.actors) && timelinePopup.actors.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {timelinePopup.actors.map((a: string) => (
+                  <span key={a} className="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-800 border border-blue-200">👤 {a}</span>
+                ))}
+              </div>
+            )}
+            {timelinePopup.period_note && (
+              <div className="mt-3">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">What happened after this (until the next event)</div>
+                <div className="text-sm text-slate-700 mt-0.5 leading-relaxed">{timelinePopup.period_note}</div>
+              </div>
+            )}
+            {timelinePopup.significance && (
+              <div className="mt-3">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Significance</div>
+                <div className="text-sm text-slate-700 mt-0.5 leading-relaxed">{timelinePopup.significance}</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <style>{`
         @keyframes spin   { to { transform: rotate(360deg); } }

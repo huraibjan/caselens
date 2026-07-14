@@ -21,6 +21,7 @@ from caselens.documents.schemas import (
     DocumentResponse,
     DocumentStatusResponse,
     PageContentResponse,
+    PageListResponse,
     ProcessingStepResponse,
 )
 
@@ -129,6 +130,41 @@ async def get_document_status(
         document_id=doc.id,
         status=doc.status.value,
         steps=steps,
+    )
+
+
+@router.get("/{document_id}/pages", response_model=PageListResponse)
+async def list_page_contents(
+    document_id: uuid.UUID,
+    current_user: OrgMember,
+    db: DbSession,
+) -> PageListResponse:
+    """Get the text content of every page in one call (for the document viewer)."""
+    assert current_user.organization_id is not None
+    doc = await _verify_document_access(
+        db, document_id, current_user.sub, current_user.organization_id
+    )
+
+    result = await db.execute(
+        select(DocumentPage)
+        .where(DocumentPage.document_id == doc.id)
+        .order_by(DocumentPage.page_number)
+    )
+    pages = result.scalars().all()
+
+    return PageListResponse(
+        document_id=doc.id,
+        total_pages=len(pages),
+        pages=[
+            PageContentResponse(
+                document_id=doc.id,
+                page_number=p.page_number,
+                text_content=p.text_content,
+                char_count=p.char_count,
+                extraction_method=p.extraction_method,
+            )
+            for p in pages
+        ],
     )
 
 

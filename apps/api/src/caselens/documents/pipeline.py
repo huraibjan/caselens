@@ -17,7 +17,6 @@ import tiktoken
 from fastapi import BackgroundTasks
 from sqlalchemy import select, update
 
-from caselens.ai_gateway.json_utils import parse_json_loose
 from caselens.ai_gateway.providers import AllProvidersFailedError, get_analysis_llm_provider
 from caselens.db.models import (
     Document,
@@ -28,66 +27,10 @@ from caselens.db.models import (
     Matter,
 )
 from caselens.db.session import async_session_factory
+from caselens.documents.analysis import run_case_analysis
 from caselens.storage.backend import get_storage_backend
 
 logger = structlog.get_logger()
-
-# Gemini-style (OpenAPI 3.0 subset, uppercase types) schema for case-intelligence
-# extraction — Gemini uses it as responseSchema; OpenAI-compatible providers get
-# it serialized into the prompt as a structural hint.
-CASE_INTELLIGENCE_SCHEMA = {
-    "type": "OBJECT",
-    "properties": {
-        "suspect": {"type": "STRING"},
-        "start_date": {"type": "STRING"},
-        "end_date": {"type": "STRING"},
-        "veracityScore": {"type": "INTEGER"},
-        "overallReasoning": {"type": "STRING"},
-        "allegations": {
-            "type": "ARRAY",
-            "items": {
-                "type": "OBJECT",
-                "properties": {
-                    "claim": {"type": "STRING"},
-                    "source": {"type": "STRING"},
-                    "status": {"type": "STRING"},
-                    "desc": {"type": "STRING"},
-                },
-            },
-        },
-        "contradictions": {
-            "type": "ARRAY",
-            "items": {
-                "type": "OBJECT",
-                "properties": {"text": {"type": "STRING"}, "severity": {"type": "STRING"}},
-            },
-        },
-        "outcomes": {
-            "type": "ARRAY",
-            "items": {
-                "type": "OBJECT",
-                "properties": {
-                    "ruling": {"type": "STRING"},
-                    "probability": {"type": "STRING"},
-                    "statute": {"type": "STRING"},
-                    "details": {"type": "STRING"},
-                },
-            },
-        },
-    },
-    "required": ["suspect", "veracityScore", "overallReasoning"],
-}
-
-_FALLBACK_METADATA = {
-    "suspect": "Unknown Defendant",
-    "start_date": "2026-07-10",
-    "end_date": "N/A",
-    "veracityScore": 75,
-    "overallReasoning": "Analysis generated based on document title.",
-    "allegations": [],
-    "contradictions": [],
-    "outcomes": [],
-}
 
 
 def _extract_pdf_pages(data: bytes) -> list[str]:
@@ -266,10 +209,12 @@ async def _analyze(document_id: uuid.UUID) -> None:
     """Generate the AI summary + structured case intelligence, mark READY."""
     llm = get_analysis_llm_provider()
 
+    # Load the text in a short-lived session, run the (slow) LLM calls with no
+    # DB connection held, then write results in a second session.
     async with async_session_factory() as session:
-        result = await session.execute(select(Document).where(Document.id == document_id))
-        doc = result.scalar_one_or_none()
-        if not doc:
+        result = await session.execute(select(Document.title).where(Document.id == document_id))
+        title = result.scalar_one_or_none()
+        if title is None:
             return
 
         chunk_result = await session.execute(
@@ -278,39 +223,16 @@ async def _analyze(document_id: uuid.UUID) -> None:
             .order_by(DocumentChunk.page_number, DocumentChunk.id)
         )
         full_text = "\n\n".join(chunk_result.scalars().all())
-        truncated = full_text[:12000]
 
-        if truncated:
-            summary_resp = await llm.generate(
-                "You are a professional legal RAG assistant. Read the following legal document "
-                "content and write a highly detailed, production-ready legal intelligence summary. "
-                "Analyze the key facts, the legal issues, the parties, and the holding/conclusions. "
-                f"Be thorough and professional.\n\nDocument Title: {doc.title}\n\n"
-                f"Document Text:\n{truncated}"
-            )
-            doc.summary = summary_resp.content
+    summary, metadata_dict = await run_case_analysis(llm, title, full_text)
 
-            intel_resp = await llm.generate_structured(
-                "You are an expert legal AI systems engineer analyzing a case document. Extract the "
-                "key case details, allegations, contradictions, and predicted outcomes based on the "
-                "document text. Return a JSON object with keys: suspect, start_date, end_date, "
-                "veracityScore (0-100 integer), overallReasoning, allegations[], contradictions[], "
-                f"outcomes[].\n\nDocument Content Excerpts:\n{truncated}",
-                schema=CASE_INTELLIGENCE_SCHEMA,
-            )
-            metadata_dict = parse_json_loose(intel_resp.content)
-            if metadata_dict is None:
-                logger.error(
-                    "pipeline.analyze.intel_parse_failed", provider=intel_resp.provider
-                )
-                metadata_dict = dict(_FALLBACK_METADATA)
-        else:
-            summary_resp = await llm.generate(
-                f"Please write a short legal summary for document titled: {doc.title}"
-            )
-            doc.summary = summary_resp.content
-            metadata_dict = dict(_FALLBACK_METADATA)
+    async with async_session_factory() as session:
+        doc_result = await session.execute(select(Document).where(Document.id == document_id))
+        doc = doc_result.scalar_one_or_none()
+        if not doc:
+            return
 
+        doc.summary = summary
         doc.status = DocumentStatus.READY
         doc.metadata_ = metadata_dict
 

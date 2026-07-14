@@ -32,6 +32,7 @@ export default function MatterDashboard({ params }: { params: Promise<{ id: stri
   const [dragOver, setDragOver]   = useState(false);
   const [error, setError]         = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   useEffect(() => { params.then(p => setMatterId(p.id)); }, [params]);
 
@@ -60,14 +61,36 @@ export default function MatterDashboard({ params }: { params: Promise<{ id: stri
     const formData = new FormData();
     formData.append('file', file);
     try {
-      await fetchApi(`/api/v1/matters/${matterId}/documents`, { method: 'POST', body: formData });
+      const created = await fetchApi(`/api/v1/matters/${matterId}/documents`, { method: 'POST', body: formData });
       if (fileInputRef.current) fileInputRef.current.value = '';
       await loadData();
+      // Auto-open the document viewer once AI analysis completes
+      if (created?.id) watchAndOpen(created.id);
     } catch (err: any) {
       setError(err.message || 'Upload failed. Please try again.');
     } finally {
       setUploading(false);
     }
+  };
+
+  /** Poll the freshly uploaded document; when analysis is READY, open the viewer. */
+  const watchAndOpen = (docId: string) => {
+    let ticks = 0;
+    const t = setInterval(async () => {
+      ticks += 1;
+      if (ticks > 60) { clearInterval(t); return; } // give up after ~3 min
+      try {
+        const d = await fetchApi(`/api/v1/documents/${docId}`);
+        const st = (d.status || '').toLowerCase();
+        if (st === 'ready') {
+          clearInterval(t);
+          router.push(`/matters/${matterId}/documents/${docId}`);
+        } else if (st === 'error') {
+          clearInterval(t);
+          await loadData();
+        }
+      } catch { /* transient — keep polling */ }
+    }, 3000);
   };
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -199,7 +222,7 @@ export default function MatterDashboard({ params }: { params: Promise<{ id: stri
                   return (
                     <div key={doc.id}
                       className="card p-4 flex items-center gap-4 card-hover"
-                      onClick={() => window.location.href = `/matters/${matterId}/workspace`}
+                      onClick={() => router.push(`/matters/${matterId}/documents/${doc.id}`)}
                     >
                       {/* File icon */}
                       <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0"

@@ -65,3 +65,9 @@ class PageContentResponse(BaseModel):
     text_content: str | None
     char_count: int
     extraction_method: str
+
+
+class PageListResponse(BaseModel):
+    document_id: uuid.UUID
+    total_pages: int
+    pages: list[PageContentResponse]
